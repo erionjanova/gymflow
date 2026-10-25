@@ -1,5 +1,7 @@
 # GymFlow
 
+[![CI](https://github.com/erionjanova/gymflow/actions/workflows/ci.yml/badge.svg)](https://github.com/erionjanova/gymflow/actions/workflows/ci.yml)
+
 **Run your gym. Not spreadsheets.**
 
 **Live demo: [erion-gymflow.onrender.com](https://erion-gymflow.onrender.com/login)**, one click on any demo account and you're in. It runs on a free server that is kept awake during the day (Central European time); at night it sleeps, so the first visit can take up to a minute to wake up. The demo resets itself every 24 hours, so feel free to click around and break things.
@@ -117,7 +119,7 @@ cd backend
 dotnet test
 ```
 
-There are 93 tests: 44 fast unit tests and 49 integration tests that run against a real Postgres started by Testcontainers. Docker needs to be running. The integration tests cover the parts I'd least like to get wrong: tenant isolation, booking races, waitlist promotion, payment syncing and webhooks, invites and password resets.
+There are 97 tests: 44 fast unit tests and 53 integration tests that run against a real Postgres started by Testcontainers. Docker needs to be running. The integration tests cover the parts I'd least like to get wrong: tenant isolation, booking races, waitlist promotion, payment syncing and webhooks, invites and password resets. GitHub Actions runs all of them, plus a type-checked frontend build, on every push.
 
 ## Running it for development
 
