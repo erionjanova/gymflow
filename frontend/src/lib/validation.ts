@@ -80,3 +80,18 @@ export const inviteSchema = z.object({
   email: emailSchema,
   role: z.enum(["Trainer", "Owner"]),
 });
+
+export const profileSchema = z.object({
+  fullName: nameSchema,
+  phoneNumber: optionalPhoneSchema,
+  preferredLanguage: z.enum(["sq", "en"]),
+});
+
+export const changePasswordSchema = z
+  .object({
+    currentPassword: z.string().min(1, "validation.required"),
+    newPassword: passwordSchema,
+    confirmPassword: z.string().min(1, "validation.required"),
+  })
+  .refine((d) => d.newPassword === d.confirmPassword, { path: ["confirmPassword"], message: "validation.passwordMatch" })
+  .refine((d) => d.newPassword !== d.currentPassword, { path: ["newPassword"], message: "validation.passwordSame" });

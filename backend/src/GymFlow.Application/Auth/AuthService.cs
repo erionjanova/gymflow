@@ -2,6 +2,7 @@ using GymFlow.Application.Common;
 using GymFlow.Application.Common.Exceptions;
 using GymFlow.Application.Common.Interfaces;
 using GymFlow.Domain.Entities;
+using GymFlow.Domain.Exceptions;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 
@@ -14,7 +15,8 @@ public class AuthService(
     ICurrentUser currentUser,
     IValidator<RegisterRequest> registerValidator,
     IValidator<LoginRequest> loginValidator,
-    IValidator<UpdateProfileRequest> profileValidator)
+    IValidator<UpdateProfileRequest> profileValidator,
+    IValidator<ChangePasswordRequest> passwordValidator)
 {
     public async Task<AuthResponse> RegisterAsync(RegisterRequest request, CancellationToken ct)
     {
@@ -69,6 +71,18 @@ public class AuthService(
         await db.SaveChangesAsync(ct);
 
         return UserDto.From(user);
+    }
+
+    public async Task ChangePasswordAsync(ChangePasswordRequest request, CancellationToken ct)
+    {
+        await passwordValidator.ValidateAndThrowAsync(request, ct);
+
+        var user = await GetCurrentUserEntityAsync(ct);
+        if (!passwordHasher.Verify(user.PasswordHash, request.CurrentPassword))
+            throw new DomainException("wrong_password", "The current password is incorrect.");
+
+        user.PasswordHash = passwordHasher.Hash(request.NewPassword);
+        await db.SaveChangesAsync(ct);
     }
 
     public async Task<IReadOnlyList<MyGymDto>> GetMyGymsAsync(CancellationToken ct)

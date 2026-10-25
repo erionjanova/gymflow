@@ -1,15 +1,16 @@
-import { Dumbbell, LogOut, Menu, Shield, X } from "lucide-react";
+import { Dumbbell, LogOut, Menu, Shield, UserRound, X } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, NavLink, useLocation, useNavigate } from "react-router";
 import { toast } from "sonner";
 import { buttonClass } from "@/components/ui/Button";
-import { cn, initials } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { useAuth } from "@/providers/AuthProvider";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { Logo } from "./Logo";
 import { ThemeToggle } from "./ThemeToggle";
+import { UserMenu } from "./UserMenu";
 
 const linkClass = ({ isActive }: { isActive: boolean }) =>
   cn("rounded-full px-4 py-2 text-sm font-medium transition-colors", isActive ? "bg-surface-2 text-fg" : "text-muted hover:text-fg");
@@ -69,18 +70,7 @@ export function Navbar() {
           <LanguageSwitcher />
           <ThemeToggle />
           {user ? (
-            <>
-              <span
-                title={user.fullName}
-                className="grid size-10 place-items-center rounded-full bg-accent-soft text-xs font-bold text-accent"
-              >
-                {initials(user.fullName)}
-              </span>
-              <button onClick={handleLogout} className={buttonClass("ghost", "sm")} aria-label={t("nav.logout")}>
-                <LogOut className="size-4" />
-                {t("nav.logout")}
-              </button>
-            </>
+            <UserMenu onLogout={handleLogout} />
           ) : (
             <>
               <Link to="/login" state={{ from: location.pathname }} className={buttonClass("ghost", "sm")}>
@@ -115,7 +105,7 @@ export function Navbar() {
             className="overflow-hidden border-t border-line bg-bg md:hidden"
           >
             <div className="space-y-1 px-4 py-4">
-              {links.map((l) => (
+              {(user ? [...links, { to: "/account", label: t("nav.account"), icon: UserRound }] : links).map((l) => (
                 <NavLink
                   key={l.to}
                   to={l.to}

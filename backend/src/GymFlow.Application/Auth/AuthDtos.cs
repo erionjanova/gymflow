@@ -14,6 +14,8 @@ public record LoginRequest(string Email, string Password);
 
 public record UpdateProfileRequest(string FullName, string? PhoneNumber, string PreferredLanguage);
 
+public record ChangePasswordRequest(string CurrentPassword, string NewPassword);
+
 public record UserDto(
     Guid Id,
     string FullName,

@@ -13,6 +13,7 @@ import {
 import GymLayout from "@/components/gym/GymLayout";
 import LoginPage from "@/pages/auth/LoginPage";
 import RegisterPage from "@/pages/auth/RegisterPage";
+import AccountPage from "@/pages/AccountPage";
 import CreateGymPage from "@/pages/CreateGymPage";
 import GymHomePage from "@/pages/gym/GymHomePage";
 import MembershipPage from "@/pages/gym/MembershipPage";
@@ -49,6 +50,7 @@ export default function App() {
             <Route element={<RequireAuth />}>
               <Route path="gyms" element={<MyGymsPage />} />
               <Route path="gyms/new" element={<CreateGymPage />} />
+              <Route path="account" element={<AccountPage />} />
             </Route>
 
             <Route element={<RequirePlatformAdmin />}>

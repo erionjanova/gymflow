@@ -33,3 +33,13 @@ public class UpdateProfileRequestValidator : AbstractValidator<UpdateProfileRequ
         RuleFor(x => x.PreferredLanguage).ValidLanguage();
     }
 }
+
+public class ChangePasswordRequestValidator : AbstractValidator<ChangePasswordRequest>
+{
+    public ChangePasswordRequestValidator()
+    {
+        RuleFor(x => x.CurrentPassword).NotEmpty();
+        RuleFor(x => x.NewPassword).ValidPassword()
+            .NotEqual(x => x.CurrentPassword).WithMessage("The new password must be different from the current one.");
+    }
+}

@@ -30,6 +30,15 @@ public class AuthController(AuthService auth) : ControllerBase
         auth.UpdateProfileAsync(request, ct);
 
     [Authorize]
+    [HttpPut("me/password")]
+    [EnableRateLimiting(RateLimits.Auth)]
+    public async Task<IActionResult> ChangePassword(ChangePasswordRequest request, CancellationToken ct)
+    {
+        await auth.ChangePasswordAsync(request, ct);
+        return NoContent();
+    }
+
+    [Authorize]
     [HttpGet("me/gyms")]
     public Task<IReadOnlyList<MyGymDto>> MyGyms(CancellationToken ct) => auth.GetMyGymsAsync(ct);
 }
