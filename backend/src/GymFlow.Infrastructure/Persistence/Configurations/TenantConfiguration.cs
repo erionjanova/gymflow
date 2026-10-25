@@ -15,6 +15,7 @@ public class TenantConfiguration : IEntityTypeConfiguration<Tenant>
         builder.Property(t => t.Phone).HasMaxLength(20);
         builder.Property(t => t.BrandColor).HasMaxLength(7).IsRequired();
         builder.Property(t => t.Currency).HasMaxLength(3).IsRequired();
+        builder.Property(t => t.TimeZone).HasMaxLength(64).IsRequired();
 
         builder.HasIndex(t => t.Slug).IsUnique();
     }

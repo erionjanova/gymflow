@@ -22,6 +22,189 @@ namespace GymFlow.Infrastructure.Persistence.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("GymFlow.Domain.Entities.Booking", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset?>("AttendanceMarkedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("attendance_marked_at");
+
+                    b.Property<DateTimeOffset?>("CancelledAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("cancelled_at");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTimeOffset?>("PromotedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("promoted_at");
+
+                    b.Property<Guid>("SessionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("session_id");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("status");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_bookings");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_bookings_user_id");
+
+                    b.HasIndex("SessionId", "UserId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_bookings_session_id_user_id")
+                        .HasFilter("status IN ('Booked', 'Waitlisted')");
+
+                    b.HasIndex("TenantId", "UserId")
+                        .HasDatabaseName("ix_bookings_tenant_id_user_id");
+
+                    b.HasIndex("SessionId", "Status", "CreatedAt")
+                        .HasDatabaseName("ix_bookings_session_id_status_created_at");
+
+                    b.ToTable("bookings", (string)null);
+                });
+
+            modelBuilder.Entity("GymFlow.Domain.Entities.ClassSession", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<int>("BookedCount")
+                        .HasColumnType("integer")
+                        .HasColumnName("booked_count");
+
+                    b.Property<DateTimeOffset?>("CancelledAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("cancelled_at");
+
+                    b.Property<int>("Capacity")
+                        .HasColumnType("integer")
+                        .HasColumnName("capacity");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTimeOffset>("EndsAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("ends_at");
+
+                    b.Property<Guid>("GymClassId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("gym_class_id");
+
+                    b.Property<bool>("IsCancelled")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_cancelled");
+
+                    b.Property<DateTimeOffset>("StartsAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("starts_at");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<Guid?>("TrainerId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("trainer_id");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.Property<int>("WaitlistCount")
+                        .HasColumnType("integer")
+                        .HasColumnName("waitlist_count");
+
+                    b.HasKey("Id")
+                        .HasName("pk_class_sessions");
+
+                    b.HasIndex("GymClassId", "StartsAt")
+                        .HasDatabaseName("ix_class_sessions_gym_class_id_starts_at");
+
+                    b.HasIndex("TenantId", "StartsAt")
+                        .HasDatabaseName("ix_class_sessions_tenant_id_starts_at");
+
+                    b.HasIndex("TrainerId", "StartsAt")
+                        .HasDatabaseName("ix_class_sessions_trainer_id_starts_at");
+
+                    b.ToTable("class_sessions", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_class_sessions_counts", "booked_count >= 0 AND booked_count <= capacity AND waitlist_count >= 0 AND ends_at > starts_at");
+                        });
+                });
+
+            modelBuilder.Entity("GymFlow.Domain.Entities.GymClass", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<int>("DefaultCapacity")
+                        .HasColumnType("integer")
+                        .HasColumnName("default_capacity");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("description");
+
+                    b.Property<int>("DurationMinutes")
+                        .HasColumnType("integer")
+                        .HasColumnName("duration_minutes");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("name");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_gym_classes");
+
+                    b.HasIndex("TenantId", "Name")
+                        .HasDatabaseName("ix_gym_classes_tenant_id_name");
+
+                    b.ToTable("gym_classes", (string)null);
+                });
+
             modelBuilder.Entity("GymFlow.Domain.Entities.MembershipPlan", b =>
                 {
                     b.Property<Guid>("Id")
@@ -130,6 +313,12 @@ namespace GymFlow.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(40)")
                         .HasColumnName("slug");
 
+                    b.Property<string>("TimeZone")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("time_zone");
+
                     b.HasKey("Id")
                         .HasName("pk_tenants");
 
@@ -231,6 +420,77 @@ namespace GymFlow.Infrastructure.Persistence.Migrations
                     b.ToTable("users", (string)null);
                 });
 
+            modelBuilder.Entity("GymFlow.Domain.Entities.Booking", b =>
+                {
+                    b.HasOne("GymFlow.Domain.Entities.ClassSession", "Session")
+                        .WithMany("Bookings")
+                        .HasForeignKey("SessionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_bookings_class_sessions_session_id");
+
+                    b.HasOne("GymFlow.Domain.Entities.Tenant", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_bookings_tenants_tenant_id");
+
+                    b.HasOne("GymFlow.Domain.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_bookings_users_user_id");
+
+                    b.Navigation("Session");
+
+                    b.Navigation("Tenant");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("GymFlow.Domain.Entities.ClassSession", b =>
+                {
+                    b.HasOne("GymFlow.Domain.Entities.GymClass", "GymClass")
+                        .WithMany("Sessions")
+                        .HasForeignKey("GymClassId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_class_sessions_gym_classes_gym_class_id");
+
+                    b.HasOne("GymFlow.Domain.Entities.Tenant", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_class_sessions_tenants_tenant_id");
+
+                    b.HasOne("GymFlow.Domain.Entities.User", "Trainer")
+                        .WithMany()
+                        .HasForeignKey("TrainerId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_class_sessions_users_trainer_id");
+
+                    b.Navigation("GymClass");
+
+                    b.Navigation("Tenant");
+
+                    b.Navigation("Trainer");
+                });
+
+            modelBuilder.Entity("GymFlow.Domain.Entities.GymClass", b =>
+                {
+                    b.HasOne("GymFlow.Domain.Entities.Tenant", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_gym_classes_tenants_tenant_id");
+
+                    b.Navigation("Tenant");
+                });
+
             modelBuilder.Entity("GymFlow.Domain.Entities.MembershipPlan", b =>
                 {
                     b.HasOne("GymFlow.Domain.Entities.Tenant", "Tenant")
@@ -262,6 +522,16 @@ namespace GymFlow.Infrastructure.Persistence.Migrations
                     b.Navigation("Tenant");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("GymFlow.Domain.Entities.ClassSession", b =>
+                {
+                    b.Navigation("Bookings");
+                });
+
+            modelBuilder.Entity("GymFlow.Domain.Entities.GymClass", b =>
+                {
+                    b.Navigation("Sessions");
                 });
 
             modelBuilder.Entity("GymFlow.Domain.Entities.Tenant", b =>

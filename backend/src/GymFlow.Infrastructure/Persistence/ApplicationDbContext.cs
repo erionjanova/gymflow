@@ -4,6 +4,7 @@ using GymFlow.Application.Common.Interfaces;
 using GymFlow.Application.Tenancy;
 using GymFlow.Domain.Common;
 using GymFlow.Domain.Entities;
+using GymFlow.Infrastructure.Persistence.Configurations;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 
@@ -19,6 +20,9 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<Tenant> Tenants => Set<Tenant>();
     public DbSet<TenantUser> TenantUsers => Set<TenantUser>();
     public DbSet<MembershipPlan> MembershipPlans => Set<MembershipPlan>();
+    public DbSet<GymClass> GymClasses => Set<GymClass>();
+    public DbSet<ClassSession> ClassSessions => Set<ClassSession>();
+    public DbSet<Booking> Bookings => Set<Booking>();
 
     private Guid CurrentTenantId => tenantContext.TenantId ?? Guid.Empty;
 
@@ -54,6 +58,10 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                     new ConflictException("slug_taken", "This gym address is already taken."),
                 PostgresErrorCodes.UniqueViolation when pg.ConstraintName == "ix_tenant_users_tenant_id_user_id" =>
                     new ConflictException("already_member", "This user is already part of the gym."),
+                PostgresErrorCodes.UniqueViolation when pg.ConstraintName == BookingConstraints.OneActivePerUser =>
+                    new ConflictException("already_booked", "You already have a spot or a waitlist place in this session."),
+                PostgresErrorCodes.CheckViolation when pg.ConstraintName == ClassSessionConstraints.Counts =>
+                    new ConflictException("session_full", "This session is full."),
                 _ => ex
             };
         }
