@@ -1,6 +1,7 @@
 using GymFlow.Application.Common;
 using GymFlow.Application.Common.Exceptions;
 using GymFlow.Application.Common.Interfaces;
+using GymFlow.Application.Notifications;
 using GymFlow.Application.Tenancy;
 using GymFlow.Domain.Entities;
 using GymFlow.Domain.Enums;
@@ -16,6 +17,7 @@ public class SessionService(
     ITenantContext tenantContext,
     ICurrentUser currentUser,
     TimeProvider timeProvider,
+    SessionNotifier notifier,
     IValidator<CreateSessionRequest> createValidator,
     IValidator<ScheduleSessionsRequest> scheduleValidator,
     IValidator<UpdateSessionRequest> updateValidator)
@@ -108,7 +110,7 @@ public class SessionService(
         await updateValidator.ValidateAndThrowAsync(request, ct);
         await EnsureTrainerAsync(request.TrainerId, ct);
 
-        return await db.WithConcurrencyRetryAsync(async () =>
+        var (promoted, moved) = await db.WithConcurrencyRetryAsync(async () =>
         {
             var session = await FindAsync(id, ct);
             var now = timeProvider.GetUtcNow();
@@ -119,7 +121,8 @@ public class SessionService(
                 throw new DomainException("session_started", "A session that already started can't be changed.");
 
             var startsAt = request.StartsAt.ToUniversalTime();
-            if (startsAt != session.StartsAt)
+            var timeChanged = startsAt != session.StartsAt;
+            if (timeChanged)
             {
                 if (startsAt <= now)
                     throw new DomainException("session_in_past", "A session must start in the future.");
@@ -131,19 +134,29 @@ public class SessionService(
 
             session.TrainerId = request.TrainerId;
 
-            var waitlist = await db.Bookings
-                .Where(b => b.SessionId == id && b.Status == BookingStatus.Waitlisted)
+            var active = await db.Bookings
+                .Where(b => b.SessionId == id && (b.Status == BookingStatus.Booked || b.Status == BookingStatus.Waitlisted))
                 .ToListAsync(ct);
-            session.ChangeCapacity(request.Capacity, waitlist, now);
+            var promotedUsers = session.ChangeCapacity(request.Capacity, active.Where(b => b.Status == BookingStatus.Waitlisted), now)
+                .Select(b => b.UserId)
+                .ToList();
 
             await db.SaveChangesAsync(ct);
-            return await GetDtoAsync(id, ct);
+
+            var movedUsers = timeChanged
+                ? active.Select(b => b.UserId).Except(promotedUsers).ToList()
+                : [];
+            return (promotedUsers, movedUsers);
         });
+
+        await notifier.NotifyAsync(SessionEmailKind.SpotOpened, id, promoted, ct);
+        await notifier.NotifyAsync(SessionEmailKind.Rescheduled, id, moved, ct);
+        return await GetDtoAsync(id, ct);
     }
 
     public async Task CancelAsync(Guid id, CancellationToken ct)
     {
-        await db.WithConcurrencyRetryAsync(async () =>
+        var affected = await db.WithConcurrencyRetryAsync(async () =>
         {
             var session = await FindAsync(id, ct);
             var active = await db.Bookings
@@ -152,8 +165,10 @@ public class SessionService(
 
             session.Cancel(active, timeProvider.GetUtcNow());
             await db.SaveChangesAsync(ct);
-            return true;
+            return active.Select(b => b.UserId).ToList();
         });
+
+        await notifier.NotifyAsync(SessionEmailKind.Cancelled, id, affected, ct);
     }
 
     public async Task<IReadOnlyList<RosterEntryDto>> GetRosterAsync(Guid id, CancellationToken ct)

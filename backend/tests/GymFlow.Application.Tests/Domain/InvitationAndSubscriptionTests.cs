@@ -1,5 +1,5 @@
 using GymFlow.Application.Billing;
-using GymFlow.Application.Invitations;
+using GymFlow.Application.Common;
 using GymFlow.Domain.Entities;
 using GymFlow.Domain.Enums;
 using GymFlow.Domain.Exceptions;
@@ -40,13 +40,13 @@ public class InvitationAndSubscriptionTests
     [Fact]
     public void Tokens_are_random_and_only_the_hash_matches()
     {
-        var (token1, hash1) = InvitationTokens.Create();
-        var (token2, _) = InvitationTokens.Create();
+        var (token1, hash1) = SecureTokens.Create();
+        var (token2, _) = SecureTokens.Create();
 
         Assert.NotEqual(token1, token2);
         Assert.Equal(64, hash1.Length);
-        Assert.Equal(hash1, InvitationTokens.Hash(token1));
-        Assert.NotEqual(hash1, InvitationTokens.Hash(token2));
+        Assert.Equal(hash1, SecureTokens.Hash(token1));
+        Assert.NotEqual(hash1, SecureTokens.Hash(token2));
     }
 
     [Theory]

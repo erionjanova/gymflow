@@ -31,3 +31,7 @@ public record UserDto(
 public record AuthResponse(string Token, DateTimeOffset ExpiresAt, UserDto User);
 
 public record MyGymDto(Guid Id, string Name, string Slug, string BrandColor, TenantRole Role);
+
+public record ForgotPasswordRequest(string Email);
+
+public record ResetPasswordRequest(string Token, string NewPassword);

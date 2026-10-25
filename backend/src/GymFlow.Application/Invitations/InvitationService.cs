@@ -59,7 +59,7 @@ public class InvitationService(
         foreach (var old in pending)
             old.Revoke(now);
 
-        var (token, hash) = InvitationTokens.Create();
+        var (token, hash) = SecureTokens.Create();
         var invitation = new Invitation
         {
             Email = email,
@@ -81,7 +81,7 @@ public class InvitationService(
         var invitation = await FindAsync(id, ct);
         var now = timeProvider.GetUtcNow();
 
-        var (token, hash) = InvitationTokens.Create();
+        var (token, hash) = SecureTokens.Create();
         invitation.Renew(hash, now.Add(Lifetime), now);
         await db.SaveChangesAsync(ct);
 
@@ -191,7 +191,7 @@ public class InvitationService(
 
     private async Task<Invitation> FindByTokenAsync(string token, CancellationToken ct)
     {
-        var hash = InvitationTokens.Hash(token);
+        var hash = SecureTokens.Hash(token);
         return await db.Invitations.IgnoreQueryFilters()
                    .Include(i => i.Tenant)
                    .SingleOrDefaultAsync(i => i.TokenHash == hash, ct)

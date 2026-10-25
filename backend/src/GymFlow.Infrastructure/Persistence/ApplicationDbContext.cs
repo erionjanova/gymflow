@@ -25,6 +25,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<Booking> Bookings => Set<Booking>();
     public DbSet<Invitation> Invitations => Set<Invitation>();
     public DbSet<MemberSubscription> MemberSubscriptions => Set<MemberSubscription>();
+    public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
 
     private Guid CurrentTenantId => tenantContext.TenantId ?? Guid.Empty;
 

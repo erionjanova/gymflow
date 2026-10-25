@@ -2,6 +2,7 @@ using GymFlow.Application.Billing;
 using GymFlow.Application.Bookings;
 using GymFlow.Application.Common;
 using GymFlow.Application.Common.Exceptions;
+using GymFlow.Application.Notifications;
 using GymFlow.Application.Tenancy;
 using GymFlow.Domain.Enums;
 using GymFlow.Domain.Exceptions;
@@ -179,7 +180,8 @@ public class BillingTests(PostgresFixture fixture)
         async Task<BookingDto> BookAsync(Guid userId, TenantRole role)
         {
             await using var db = fixture.CreateContext(gym.TenantId, role);
-            return await new BookingService(db, Tenant(gym.TenantId, role), new FakeCurrentUser(userId), TimeProvider.System)
+            return await new BookingService(db, Tenant(gym.TenantId, role), new FakeCurrentUser(userId), TimeProvider.System,
+                    new SessionNotifier(db, new CapturingEmailSender(), Options.Create(new AppOptions())))
                 .BookAsync(sessionId, default);
         }
 

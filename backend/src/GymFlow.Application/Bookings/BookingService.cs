@@ -1,6 +1,7 @@
 using GymFlow.Application.Common;
 using GymFlow.Application.Common.Exceptions;
 using GymFlow.Application.Common.Interfaces;
+using GymFlow.Application.Notifications;
 using GymFlow.Application.Tenancy;
 using GymFlow.Domain.Entities;
 using GymFlow.Domain.Enums;
@@ -12,7 +13,8 @@ public class BookingService(
     IApplicationDbContext db,
     ITenantContext tenantContext,
     ICurrentUser currentUser,
-    TimeProvider timeProvider)
+    TimeProvider timeProvider,
+    SessionNotifier notifier)
 {
     private const int HistoryLimit = 100;
 
@@ -42,7 +44,7 @@ public class BookingService(
     {
         var userId = currentUser.RequireUserId();
 
-        var bookingId = await db.WithConcurrencyRetryAsync(async () =>
+        var (bookingId, promotedUserId) = await db.WithConcurrencyRetryAsync(async () =>
         {
             var session = await FindSessionAsync(sessionId, ct);
             var bookings = await db.Bookings
@@ -53,10 +55,13 @@ public class BookingService(
             var mine = bookings.SingleOrDefault(b => b.UserId == userId)
                 ?? throw new NotFoundException("booking_not_found", "You don't have a booking for this session.");
 
-            session.CancelBooking(mine, bookings.Where(b => b.Status == BookingStatus.Waitlisted), timeProvider.GetUtcNow());
+            var promoted = session.CancelBooking(mine, bookings.Where(b => b.Status == BookingStatus.Waitlisted), timeProvider.GetUtcNow());
             await db.SaveChangesAsync(ct);
-            return mine.Id;
+            return (mine.Id, promoted?.UserId);
         });
+
+        if (promotedUserId is { } promotedId)
+            await notifier.NotifyAsync(SessionEmailKind.SpotOpened, sessionId, [promotedId], ct);
 
         return await GetDtoAsync(bookingId, ct);
     }

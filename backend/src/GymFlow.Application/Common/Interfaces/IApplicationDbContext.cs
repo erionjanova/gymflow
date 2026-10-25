@@ -15,6 +15,7 @@ public interface IApplicationDbContext
     DbSet<Booking> Bookings { get; }
     DbSet<Invitation> Invitations { get; }
     DbSet<MemberSubscription> MemberSubscriptions { get; }
+    DbSet<PasswordResetToken> PasswordResetTokens { get; }
 
     ChangeTracker ChangeTracker { get; }
 

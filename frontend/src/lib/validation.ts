@@ -95,3 +95,14 @@ export const changePasswordSchema = z
   })
   .refine((d) => d.newPassword === d.confirmPassword, { path: ["confirmPassword"], message: "validation.passwordMatch" })
   .refine((d) => d.newPassword !== d.currentPassword, { path: ["newPassword"], message: "validation.passwordSame" });
+
+export const forgotPasswordSchema = z.object({
+  email: emailSchema,
+});
+
+export const resetPasswordSchema = z
+  .object({
+    newPassword: passwordSchema,
+    confirmPassword: z.string().min(1, "validation.required"),
+  })
+  .refine((d) => d.newPassword === d.confirmPassword, { path: ["confirmPassword"], message: "validation.passwordMatch" });

@@ -14,6 +14,8 @@ import GymLayout from "@/components/gym/GymLayout";
 import LoginPage from "@/pages/auth/LoginPage";
 import RegisterPage from "@/pages/auth/RegisterPage";
 import AccountPage from "@/pages/AccountPage";
+import ForgotPasswordPage from "@/pages/auth/ForgotPasswordPage";
+import ResetPasswordPage from "@/pages/auth/ResetPasswordPage";
 import CreateGymPage from "@/pages/CreateGymPage";
 import GymHomePage from "@/pages/gym/GymHomePage";
 import MembershipPage from "@/pages/gym/MembershipPage";
@@ -41,10 +43,12 @@ export default function App() {
           <Route element={<RootLayout />}>
             <Route index element={<LandingPage />} />
             <Route path="invite/:token" element={<InvitePage />} />
+            <Route path="reset-password/:token" element={<ResetPasswordPage />} />
 
             <Route element={<GuestOnly />}>
               <Route path="login" element={<LoginPage />} />
               <Route path="register" element={<RegisterPage />} />
+              <Route path="forgot-password" element={<ForgotPasswordPage />} />
             </Route>
 
             <Route element={<RequireAuth />}>

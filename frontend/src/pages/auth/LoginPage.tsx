@@ -55,6 +55,11 @@ export default function LoginPage() {
             <Input id={id} type="password" autoComplete="current-password" aria-describedby={d} aria-invalid={!!errors.password} {...register("password")} />
           )}
         </Field>
+        <div className="-mt-2 text-right">
+          <Link to="/forgot-password" className="text-sm font-medium text-muted hover:text-accent hover:underline">
+            {t("auth.forgotLink")}
+          </Link>
+        </div>
         <Button type="submit" size="lg" className="w-full" loading={isSubmitting}>
           {t("auth.loginButton")}
         </Button>

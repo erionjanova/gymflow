@@ -43,3 +43,20 @@ public class ChangePasswordRequestValidator : AbstractValidator<ChangePasswordRe
             .NotEqual(x => x.CurrentPassword).WithMessage("The new password must be different from the current one.");
     }
 }
+
+public class ForgotPasswordRequestValidator : AbstractValidator<ForgotPasswordRequest>
+{
+    public ForgotPasswordRequestValidator()
+    {
+        RuleFor(x => x.Email).NotEmpty().EmailAddress().MaximumLength(200);
+    }
+}
+
+public class ResetPasswordRequestValidator : AbstractValidator<ResetPasswordRequest>
+{
+    public ResetPasswordRequestValidator()
+    {
+        RuleFor(x => x.Token).NotEmpty().MaximumLength(100);
+        RuleFor(x => x.NewPassword).ValidPassword();
+    }
+}

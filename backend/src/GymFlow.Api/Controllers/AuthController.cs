@@ -8,7 +8,7 @@ namespace GymFlow.Api.Controllers;
 
 [ApiController]
 [Route("api/auth")]
-public class AuthController(AuthService auth) : ControllerBase
+public class AuthController(AuthService auth, PasswordResetService passwordReset) : ControllerBase
 {
     [HttpPost("register")]
     [EnableRateLimiting(RateLimits.Auth)]
@@ -19,6 +19,22 @@ public class AuthController(AuthService auth) : ControllerBase
     [EnableRateLimiting(RateLimits.Auth)]
     public Task<AuthResponse> Login(LoginRequest request, CancellationToken ct) =>
         auth.LoginAsync(request, ct);
+
+    [HttpPost("forgot-password")]
+    [EnableRateLimiting(RateLimits.Auth)]
+    public async Task<IActionResult> ForgotPassword(ForgotPasswordRequest request, CancellationToken ct)
+    {
+        await passwordReset.RequestAsync(request, ct);
+        return NoContent();
+    }
+
+    [HttpPost("reset-password")]
+    [EnableRateLimiting(RateLimits.Auth)]
+    public async Task<IActionResult> ResetPassword(ResetPasswordRequest request, CancellationToken ct)
+    {
+        await passwordReset.ResetAsync(request, ct);
+        return NoContent();
+    }
 
     [Authorize]
     [HttpGet("me")]

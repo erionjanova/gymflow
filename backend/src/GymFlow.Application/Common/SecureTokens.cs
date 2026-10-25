@@ -2,9 +2,9 @@ using System.Buffers.Text;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace GymFlow.Application.Invitations;
+namespace GymFlow.Application.Common;
 
-public static class InvitationTokens
+public static class SecureTokens
 {
     public static (string Token, string Hash) Create()
     {

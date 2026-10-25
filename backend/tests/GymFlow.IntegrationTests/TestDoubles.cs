@@ -15,8 +15,13 @@ public partial class CapturingEmailSender : IEmailSender
 
     public string LastInvitationToken() => InviteLink().Match(Sent[^1].HtmlBody).Groups[1].Value;
 
+    public string LastResetToken() => ResetLink().Match(Sent[^1].HtmlBody).Groups[1].Value;
+
     [GeneratedRegex("/invite/([A-Za-z0-9_-]+)")]
     private static partial Regex InviteLink();
+
+    [GeneratedRegex("/reset-password/([A-Za-z0-9_-]+)")]
+    private static partial Regex ResetLink();
 }
 
 public class FakePaymentGateway(bool configured = true) : IPaymentGateway

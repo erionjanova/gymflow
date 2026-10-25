@@ -1,22 +1,36 @@
 using GymFlow.Application.Bookings;
+using GymFlow.Application.Common;
 using GymFlow.Application.Common.Exceptions;
+using GymFlow.Application.Notifications;
 using GymFlow.Application.Sessions;
 using GymFlow.Application.Tenancy;
 using GymFlow.Domain.Enums;
 using GymFlow.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace GymFlow.IntegrationTests;
 
 [Collection(PostgresCollection.Name)]
 public class BookingTests(PostgresFixture fixture)
 {
+    private readonly CapturingEmailSender _email = new();
+
+    private SessionNotifier Notifier(ApplicationDbContext db) =>
+        new(db, _email, Options.Create(new AppOptions { FrontendUrl = "http://app.test" }));
+
+    private async Task<string> EmailOfAsync(Guid userId)
+    {
+        await using var db = fixture.CreateContext();
+        return await db.Users.Where(u => u.Id == userId).Select(u => u.Email).SingleAsync();
+    }
+
     private BookingService Bookings(ApplicationDbContext db, Guid tenantId, Guid userId)
     {
         var tenantContext = new TenantContext();
         tenantContext.SetTenant(tenantId, "test");
         tenantContext.SetRole(TenantRole.Member);
-        return new BookingService(db, tenantContext, new FakeCurrentUser(userId), TimeProvider.System);
+        return new BookingService(db, tenantContext, new FakeCurrentUser(userId), TimeProvider.System, Notifier(db));
     }
 
     private SessionService Sessions(ApplicationDbContext db, Guid userId, TenantRole role, Guid tenantId)
@@ -26,7 +40,7 @@ public class BookingTests(PostgresFixture fixture)
         tenantContext.SetRole(role);
 
         return new SessionService(
-            db, tenantContext, new FakeCurrentUser(userId), TimeProvider.System,
+            db, tenantContext, new FakeCurrentUser(userId), TimeProvider.System, Notifier(db),
             new CreateSessionRequestValidator(), new ScheduleSessionsRequestValidator(), new UpdateSessionRequestValidator());
     }
 
@@ -124,7 +138,35 @@ public class BookingTests(PostgresFixture fixture)
             Assert.Equal(BookingStatus.Cancelled, Assert.Single(firstHistory).Status);
         }
 
+        var email = Assert.Single(_email.Sent);
+        Assert.Equal(await EmailOfAsync(users[1]), email.To);
+        Assert.StartsWith("Keni një vend", email.Subject);
+        Assert.Contains("http://app.test/g/", email.HtmlBody);
+
         await AssertCountsMatchRowsAsync(gym.TenantId, sessionId, 1);
+    }
+
+    [Fact]
+    public async Task Moving_a_session_emails_everyone_and_promotes_into_new_spots()
+    {
+        var gym = await fixture.SeedGymAsync("Move Gym");
+        var users = await fixture.SeedUsersAsync(gym.TenantId, 3);
+        var sessionId = await fixture.SeedSessionAsync(gym.TenantId, capacity: 2);
+        foreach (var user in users)
+            await BookAsync(gym.TenantId, sessionId, user);
+
+        await using (var db = fixture.CreateContext(gym.TenantId, TenantRole.Owner))
+        {
+            var session = await db.ClassSessions.AsNoTracking().SingleAsync(s => s.Id == sessionId);
+            await Sessions(db, gym.OwnerId, TenantRole.Owner, gym.TenantId)
+                .UpdateAsync(sessionId, new UpdateSessionRequest(null, session.StartsAt.AddDays(1), 3), default);
+        }
+
+        var promoted = Assert.Single(_email.Sent, e => e.Subject.StartsWith("Keni një vend"));
+        Assert.Equal(await EmailOfAsync(users[2]), promoted.To);
+
+        var moved = _email.Sent.Where(e => e.Subject.Contains("u zhvendos")).Select(e => e.To).Order().ToList();
+        Assert.Equal((await Task.WhenAll(users.Take(2).Select(EmailOfAsync))).Order().ToList(), moved);
     }
 
     [Fact]
@@ -143,6 +185,7 @@ public class BookingTests(PostgresFixture fixture)
         Assert.All(await check.Bookings.Where(b => b.SessionId == sessionId).ToListAsync(),
             b => Assert.Equal(BookingStatus.Cancelled, b.Status));
         Assert.True((await check.ClassSessions.SingleAsync(s => s.Id == sessionId)).IsCancelled);
+        Assert.Equal(3, _email.Sent.Count(e => e.Subject.EndsWith("u anulua")));
         await Assert.ThrowsAsync<GymFlow.Domain.Exceptions.DomainException>(
             () => BookAsync(gym.TenantId, sessionId, gym.MemberId));
     }

@@ -70,7 +70,7 @@ public class InvitationTests(PostgresFixture fixture)
         {
             var stored = await db.Invitations.IgnoreQueryFilters().SingleAsync(i => i.Email == email);
             Assert.NotEqual(token, stored.TokenHash);
-            Assert.Equal(InvitationTokens.Hash(token), stored.TokenHash);
+            Assert.Equal(SecureTokens.Hash(token), stored.TokenHash);
 
             var preview = await Service(db, null, null).PreviewAsync(token, default);
             Assert.Equal("Invite Gym", preview.GymName);
