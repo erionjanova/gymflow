@@ -1,4 +1,3 @@
-using GymFlow.Application.Billing;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Stripe;
@@ -24,7 +23,7 @@ public class StripeWebhookProcessor(
             case EventTypes.CustomerSubscriptionCreated:
             case EventTypes.CustomerSubscriptionUpdated:
             case EventTypes.CustomerSubscriptionDeleted:
-                await billing.ApplyUpdateAsync(ToUpdate((Subscription)stripeEvent.Data.Object, eventAt), ct);
+                await billing.ApplyUpdateAsync(StripePaymentGateway.ToUpdate((Subscription)stripeEvent.Data.Object, eventAt), ct);
                 break;
 
             case EventTypes.CheckoutSessionCompleted:
@@ -34,7 +33,7 @@ public class StripeWebhookProcessor(
 
                 var subscription = await new SubscriptionService(gateway.CreateClient())
                     .GetAsync(session.SubscriptionId, cancellationToken: ct);
-                await billing.ApplyUpdateAsync(ToUpdate(subscription, eventAt), ct);
+                await billing.ApplyUpdateAsync(StripePaymentGateway.ToUpdate(subscription, eventAt), ct);
                 break;
 
             default:
@@ -42,23 +41,4 @@ public class StripeWebhookProcessor(
                 break;
         }
     }
-
-    private static SubscriptionUpdate ToUpdate(Subscription s, DateTimeOffset eventAt)
-    {
-        var periodEnd = s.Items?.Data?.Select(i => i.CurrentPeriodEnd).DefaultIfEmpty().Max();
-
-        return new SubscriptionUpdate(
-            s.Id,
-            s.Status,
-            s.CustomerId,
-            periodEnd is { } end && end != default ? new DateTimeOffset(DateTime.SpecifyKind(end, DateTimeKind.Utc)) : null,
-            s.CancelAtPeriodEnd,
-            eventAt,
-            ReadGuid(s.Metadata, PaymentMetadata.TenantId),
-            ReadGuid(s.Metadata, PaymentMetadata.UserId),
-            ReadGuid(s.Metadata, PaymentMetadata.PlanId));
-    }
-
-    private static Guid? ReadGuid(IDictionary<string, string>? metadata, string key) =>
-        metadata is not null && metadata.TryGetValue(key, out var value) && Guid.TryParse(value, out var id) ? id : null;
 }

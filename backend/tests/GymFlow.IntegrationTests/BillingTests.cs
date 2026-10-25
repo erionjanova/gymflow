@@ -116,6 +116,7 @@ public class BillingTests(PostgresFixture fixture)
         Assert.Equal("Premium", request.PlanName);
         Assert.Equal(20m, request.Price);
         Assert.StartsWith("http://app.test/g/", request.SuccessUrl);
+        Assert.EndsWith("session_id={CHECKOUT_SESSION_ID}", request.SuccessUrl);
 
         await WebhookAsync(Update(gym, $"sub_{Guid.NewGuid():N}", "active", T0));
 
@@ -125,6 +126,49 @@ public class BillingTests(PostgresFixture fixture)
                 Billing(db, gym.TenantId, gym.MemberId, gateway).StartCheckoutAsync(gym.PlanIds[0], default));
             Assert.Equal("already_subscribed", ex.Code);
         }
+    }
+
+    [Fact]
+    public async Task Returning_from_checkout_activates_without_waiting_for_the_webhook()
+    {
+        var gym = await fixture.SeedGymAsync("Sync Gym", "Basic");
+        var stripeId = $"sub_{Guid.NewGuid():N}";
+        var gateway = new FakePaymentGateway();
+        gateway.CompletedCheckouts["cs_test_paid"] = Update(gym, stripeId, "active", T0.AddMinutes(1));
+
+        await using (var db = fixture.CreateContext(gym.TenantId, TenantRole.Member))
+        {
+            var synced = await Billing(db, gym.TenantId, gym.MemberId, gateway).SyncCheckoutAsync("cs_test_paid", default);
+            Assert.Equal(SubscriptionStatus.Active, synced!.Status);
+        }
+
+        Assert.False(await WebhookAsync(Update(gym, stripeId, "incomplete", T0)));
+        Assert.True(await WebhookAsync(Update(gym, stripeId, "active", T0.AddMinutes(2))));
+        Assert.Equal(SubscriptionStatus.Active, (await MineAsync(gym))!.Status);
+
+        await using (var db = fixture.CreateContext(gym.TenantId, TenantRole.Member))
+        {
+            var again = await Billing(db, gym.TenantId, gym.MemberId, gateway).SyncCheckoutAsync("cs_test_paid", default);
+            Assert.Equal(SubscriptionStatus.Active, again!.Status);
+            Assert.Equal(1, await db.MemberSubscriptions.CountAsync(s => s.StripeSubscriptionId == stripeId));
+        }
+    }
+
+    [Fact]
+    public async Task A_member_cannot_claim_someone_elses_checkout()
+    {
+        var gym = await fixture.SeedGymAsync("Claim Gym", "Basic");
+        var intruder = (await fixture.SeedUsersAsync(gym.TenantId, 1))[0];
+        var gateway = new FakePaymentGateway();
+        gateway.CompletedCheckouts["cs_test_theirs"] = Update(gym, $"sub_{Guid.NewGuid():N}", "active", T0);
+
+        await using var db = fixture.CreateContext(gym.TenantId, TenantRole.Member);
+        var ex = await Assert.ThrowsAsync<ForbiddenException>(() =>
+            Billing(db, gym.TenantId, intruder, gateway).SyncCheckoutAsync("cs_test_theirs", default));
+        Assert.Equal("checkout_not_yours", ex.Code);
+
+        await Assert.ThrowsAsync<DomainException>(() =>
+            Billing(db, gym.TenantId, intruder, gateway).SyncCheckoutAsync("not-a-session", default));
     }
 
     [Fact]

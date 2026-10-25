@@ -7,7 +7,7 @@ using Stripe.Checkout;
 
 namespace GymFlow.Infrastructure.Payments;
 
-public class StripePaymentGateway(IOptions<StripeOptions> options) : IPaymentGateway
+public class StripePaymentGateway(IOptions<StripeOptions> options, TimeProvider timeProvider) : IPaymentGateway
 {
     private readonly StripeOptions _options = options.Value;
 
@@ -75,5 +75,35 @@ public class StripePaymentGateway(IOptions<StripeOptions> options) : IPaymentGat
         new SubscriptionService(CreateClient()).UpdateAsync(
             subscriptionId, new SubscriptionUpdateOptions { CancelAtPeriodEnd = cancel }, cancellationToken: ct);
 
+    public async Task<SubscriptionUpdate?> GetCheckoutSubscriptionAsync(string checkoutSessionId, CancellationToken ct)
+    {
+        var client = CreateClient();
+        var session = await new SessionService(client).GetAsync(checkoutSessionId, cancellationToken: ct);
+        if (session.Status != "complete" || session.SubscriptionId is null)
+            return null;
+
+        var subscription = await new SubscriptionService(client).GetAsync(session.SubscriptionId, cancellationToken: ct);
+        return ToUpdate(subscription, timeProvider.GetUtcNow());
+    }
+
     internal StripeClient CreateClient() => new(_options.SecretKey);
+
+    internal static SubscriptionUpdate ToUpdate(Subscription s, DateTimeOffset eventAt)
+    {
+        var periodEnd = s.Items?.Data?.Select(i => i.CurrentPeriodEnd).DefaultIfEmpty().Max();
+
+        return new SubscriptionUpdate(
+            s.Id,
+            s.Status,
+            s.CustomerId,
+            periodEnd is { } end && end != default ? new DateTimeOffset(DateTime.SpecifyKind(end, DateTimeKind.Utc)) : null,
+            s.CancelAtPeriodEnd,
+            eventAt,
+            ReadGuid(s.Metadata, PaymentMetadata.TenantId),
+            ReadGuid(s.Metadata, PaymentMetadata.UserId),
+            ReadGuid(s.Metadata, PaymentMetadata.PlanId));
+    }
+
+    private static Guid? ReadGuid(IDictionary<string, string>? metadata, string key) =>
+        metadata is not null && metadata.TryGetValue(key, out var value) && Guid.TryParse(value, out var id) ? id : null;
 }

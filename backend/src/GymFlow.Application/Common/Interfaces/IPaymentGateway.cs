@@ -1,3 +1,4 @@
+using GymFlow.Application.Billing;
 using GymFlow.Domain.Enums;
 
 namespace GymFlow.Application.Common.Interfaces;
@@ -23,4 +24,6 @@ public interface IPaymentGateway
     Task<string> CreateCheckoutUrlAsync(CheckoutRequest request, CancellationToken ct);
 
     Task SetCancelAtPeriodEndAsync(string subscriptionId, bool cancel, CancellationToken ct);
+
+    Task<SubscriptionUpdate?> GetCheckoutSubscriptionAsync(string checkoutSessionId, CancellationToken ct);
 }

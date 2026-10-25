@@ -191,6 +191,8 @@ const en = {
     resumed: "Great — your membership will keep renewing.",
     pastDue: "Your last payment failed. Stripe will retry; please check your card.",
     confirming: "Confirming your payment…",
+    stillConfirming: "Your payment is taking longer than usual to confirm. If you were charged, your membership will show up here shortly.",
+    checkAgain: "Check again",
     welcome: "Payment received — welcome aboard!",
     checkoutCancelled: "Checkout cancelled. No payment was made.",
     stripeNote: "Payments are processed securely by Stripe. GymFlow never sees your card details.",

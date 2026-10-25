@@ -45,9 +45,40 @@ public class BillingService(
         var baseUrl = $"{appOptions.Value.FrontendUrl.TrimEnd('/')}/g/{gym.Slug}/membership";
         var url = await gateway.CreateCheckoutUrlAsync(new CheckoutRequest(
             tenantId, userId, plan.Id, gym.Name, plan.Name, plan.Price, gym.Currency, plan.Interval,
-            email, customerId, $"{baseUrl}?checkout=success", $"{baseUrl}?checkout=cancelled"), ct);
+            email, customerId, $"{baseUrl}?checkout=success&session_id={{CHECKOUT_SESSION_ID}}", $"{baseUrl}?checkout=cancelled"), ct);
 
         return new CheckoutDto(url);
+    }
+
+    public async Task<MySubscriptionDto?> SyncCheckoutAsync(string checkoutSessionId, CancellationToken ct)
+    {
+        if (!gateway.IsConfigured)
+            throw new DomainException("payments_not_configured", "Online payments are not set up yet.");
+
+        var userId = currentUser.RequireUserId();
+        var tenantId = tenantContext.RequireTenantId();
+
+        if (string.IsNullOrWhiteSpace(checkoutSessionId) || !checkoutSessionId.StartsWith("cs_") || checkoutSessionId.Length > 255)
+            throw new DomainException("invalid_checkout_session", "This payment reference is not valid.");
+
+        var update = await gateway.GetCheckoutSubscriptionAsync(checkoutSessionId, ct);
+        if (update is not null)
+        {
+            if (update.TenantId != tenantId || update.UserId != userId)
+                throw new ForbiddenException("checkout_not_yours", "This payment belongs to someone else.");
+
+            try
+            {
+                await ApplyUpdateAsync(update, ct);
+            }
+            catch (ConflictException)
+            {
+                db.ChangeTracker.Clear();
+                await ApplyUpdateAsync(update, ct);
+            }
+        }
+
+        return await GetMineAsync(ct);
     }
 
     public async Task<MySubscriptionDto?> GetMineAsync(CancellationToken ct)

@@ -193,6 +193,8 @@ const sq: Translation = {
     resumed: "Shkëlqyeshëm — anëtarësimi do të vazhdojë të rinovohet.",
     pastDue: "Pagesa e fundit dështoi. Stripe do të provojë përsëri; kontrollo kartën.",
     confirming: "Duke konfirmuar pagesën…",
+    stillConfirming: "Konfirmimi i pagesës po zgjat më shumë se zakonisht. Nëse të është tërhequr pagesa, anëtarësimi do të shfaqet këtu së shpejti.",
+    checkAgain: "Kontrollo përsëri",
     welcome: "Pagesa u mor — mirë se erdhe!",
     checkoutCancelled: "Pagesa u anulua. Nuk u tërhoq asnjë shumë.",
     stripeNote: "Pagesat përpunohen në mënyrë të sigurt nga Stripe. GymFlow nuk i sheh kurrë të dhënat e kartës.",

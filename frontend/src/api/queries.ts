@@ -113,11 +113,11 @@ export const useInvitationPreview = (token: string) =>
     queryFn: () => api.get<InvitationPreview>(`/api/invitations/${encodeURIComponent(token)}`),
   });
 
-export const useMySubscription = (slug: string, enabled = true) =>
+export const useMySubscription = (slug: string, refetchInterval: number | false = false) =>
   useQuery({
     queryKey: keys.subscription(slug),
     queryFn: async () => (await api.get<MySubscription | undefined>(gymPath(slug, "/me/subscription"))) ?? null,
-    enabled,
+    refetchInterval,
   });
 
 export const useBillingOverview = (slug: string) =>

@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { CheckCircle2, CreditCard, Loader2 } from "lucide-react";
-import { useEffect, useRef } from "react";
+import { CheckCircle2, CreditCard, Loader2, RefreshCw } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router";
 import { toast } from "sonner";
@@ -22,12 +22,35 @@ export default function MembershipPage() {
   const queryClient = useQueryClient();
   const [params, setParams] = useSearchParams();
   const checkout = params.get("checkout");
-  const pollCount = useRef(0);
+  const sessionId = params.get("session_id");
+  const [timedOut, setTimedOut] = useState(false);
+  const syncedSession = useRef<string | null>(null);
 
-  const { data: subscription, isLoading } = useMySubscription(slug);
+  const awaitingPayment = checkout === "success";
+  const { data: subscription, isLoading } = useMySubscription(slug, awaitingPayment && !timedOut ? 2000 : false);
   const { data: plans } = usePlans(slug);
   const hasAccess = subscription?.status === "Active" || subscription?.status === "PastDue";
-  const waitingForWebhook = checkout === "success" && !hasAccess && pollCount.current < 15;
+  const confirming = awaitingPayment && !hasAccess && !timedOut;
+
+  const syncCheckout = useCallback(() => {
+    if (!sessionId) return;
+    api
+      .post<MySubscription | undefined>(gymPath(slug, "/me/subscription/sync"), { checkoutSessionId: sessionId })
+      .then((s) => s && queryClient.setQueryData(keys.subscription(slug), s))
+      .catch(() => {});
+  }, [sessionId, slug, queryClient]);
+
+  useEffect(() => {
+    if (!awaitingPayment || !sessionId || syncedSession.current === sessionId) return;
+    syncedSession.current = sessionId;
+    syncCheckout();
+  }, [awaitingPayment, sessionId, syncCheckout]);
+
+  useEffect(() => {
+    if (!confirming) return;
+    const timer = setTimeout(() => setTimedOut(true), 45_000);
+    return () => clearTimeout(timer);
+  }, [confirming]);
 
   useEffect(() => {
     if (checkout === "cancelled") {
@@ -37,18 +60,10 @@ export default function MembershipPage() {
   }, [checkout, setParams, t]);
 
   useEffect(() => {
-    if (checkout !== "success") return;
-    if (hasAccess) {
-      toast.success(t("membership.welcome"));
-      setParams({}, { replace: true });
-      return;
-    }
-    const timer = setTimeout(() => {
-      pollCount.current += 1;
-      queryClient.invalidateQueries({ queryKey: keys.subscription(slug) });
-    }, 2000);
-    return () => clearTimeout(timer);
-  }, [checkout, hasAccess, subscription, queryClient, slug, setParams, t]);
+    if (!awaitingPayment || !hasAccess) return;
+    toast.success(t("membership.welcome"));
+    setParams({}, { replace: true });
+  }, [awaitingPayment, hasAccess, setParams, t]);
 
   const startCheckout = useMutation({
     mutationFn: (planId: string) => api.post<{ url: string }>(gymPath(slug, `/plans/${planId}/checkout`)),
@@ -70,10 +85,27 @@ export default function MembershipPage() {
     <div className="space-y-8">
       <PageHeader title={t("membership.title")} subtitle={t("membership.subtitle")} />
 
-      {waitingForWebhook && (
+      {confirming && (
         <div className="flex items-center gap-3 rounded-2xl border border-accent/30 bg-accent-soft px-5 py-4 text-sm font-medium text-accent">
           <Loader2 className="size-4 animate-spin" />
           {t("membership.confirming")}
+        </div>
+      )}
+
+      {awaitingPayment && !hasAccess && timedOut && (
+        <div className="flex flex-col gap-3 rounded-2xl border border-warning/30 bg-warning-soft px-5 py-4 text-sm text-warning sm:flex-row sm:items-center">
+          <p className="flex-1">{t("membership.stillConfirming")}</p>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              setTimedOut(false);
+              syncCheckout();
+            }}
+          >
+            <RefreshCw className="size-4" />
+            {t("membership.checkAgain")}
+          </Button>
         </div>
       )}
 
@@ -133,7 +165,7 @@ export default function MembershipPage() {
                     className="w-full"
                     variant={i === 1 ? "primary" : "outline"}
                     loading={startCheckout.isPending && startCheckout.variables === plan.id}
-                    disabled={startCheckout.isPending || waitingForWebhook}
+                    disabled={startCheckout.isPending || confirming}
                     onClick={() => startCheckout.mutate(plan.id)}
                   >
                     {t("membership.subscribe")}

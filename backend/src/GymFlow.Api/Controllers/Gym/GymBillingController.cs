@@ -19,6 +19,11 @@ public class GymBillingController(BillingService billing) : ControllerBase
     public Task<MySubscriptionDto?> MySubscription(string slug, CancellationToken ct) => billing.GetMineAsync(ct);
 
     [Authorize(Policy = Policies.GymMember)]
+    [HttpPost("me/subscription/sync")]
+    public Task<MySubscriptionDto?> Sync(string slug, SyncCheckoutRequest request, CancellationToken ct) =>
+        billing.SyncCheckoutAsync(request.CheckoutSessionId, ct);
+
+    [Authorize(Policy = Policies.GymMember)]
     [HttpPut("me/subscription/cancellation")]
     public Task<MySubscriptionDto> SetCancellation(string slug, SetCancelRequest request, CancellationToken ct) =>
         billing.SetCancelAtPeriodEndAsync(request.CancelAtPeriodEnd, ct);

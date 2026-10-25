@@ -35,6 +35,8 @@ public record BillingOverviewDto(
 
 public record SetCancelRequest(bool CancelAtPeriodEnd);
 
+public record SyncCheckoutRequest(string CheckoutSessionId);
+
 public record SubscriptionUpdate(
     string StripeSubscriptionId,
     string StripeStatus,

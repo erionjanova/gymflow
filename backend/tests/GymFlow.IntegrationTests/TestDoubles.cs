@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using GymFlow.Application.Billing;
 using GymFlow.Application.Common.Interfaces;
 
 namespace GymFlow.IntegrationTests;
@@ -42,6 +43,11 @@ public class FakePaymentGateway(bool configured = true) : IPaymentGateway
         CancelCalls.Add((subscriptionId, cancel));
         return Task.CompletedTask;
     }
+
+    public Dictionary<string, SubscriptionUpdate> CompletedCheckouts { get; } = [];
+
+    public Task<SubscriptionUpdate?> GetCheckoutSubscriptionAsync(string checkoutSessionId, CancellationToken ct) =>
+        Task.FromResult(CompletedCheckouts.GetValueOrDefault(checkoutSessionId));
 }
 
 public class ShiftedTimeProvider(TimeSpan shift) : TimeProvider
