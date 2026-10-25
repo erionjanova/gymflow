@@ -39,5 +39,6 @@ public class UpdateGymRequestValidator : AbstractValidator<UpdateGymRequest>
         RuleFor(x => x.Phone).ValidPhoneNumber().When(x => !string.IsNullOrWhiteSpace(x.Phone));
         RuleFor(x => x.BrandColor).ValidHexColor();
         RuleFor(x => x.Currency).ValidCurrency();
+        RuleFor(x => x.TimeZone).NotEmpty().Must(GymTime.IsValidTimeZone).WithMessage("Time zone is not valid.");
     }
 }

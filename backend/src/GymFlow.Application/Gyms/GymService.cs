@@ -62,6 +62,7 @@ public class GymService(
         tenant.Phone = TrimToNull(request.Phone);
         tenant.BrandColor = request.BrandColor.ToLowerInvariant();
         tenant.Currency = request.Currency;
+        tenant.TimeZone = request.TimeZone;
         await db.SaveChangesAsync(ct);
 
         return GymDto.From(tenant);

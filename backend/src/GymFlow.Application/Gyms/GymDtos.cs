@@ -11,10 +11,11 @@ public record GymDto(
     string? Address,
     string? Phone,
     string BrandColor,
-    string Currency)
+    string Currency,
+    string TimeZone)
 {
     public static GymDto From(Tenant t) =>
-        new(t.Id, t.Name, t.Slug, t.Description, t.Address, t.Phone, t.BrandColor, t.Currency);
+        new(t.Id, t.Name, t.Slug, t.Description, t.Address, t.Phone, t.BrandColor, t.Currency, t.TimeZone);
 }
 
 public record CreateGymRequest(
@@ -31,6 +32,7 @@ public record UpdateGymRequest(
     string? Address,
     string? Phone,
     string BrandColor,
-    string Currency);
+    string Currency,
+    string TimeZone);
 
 public record GymMembershipDto(GymDto Gym, TenantRole? Role);

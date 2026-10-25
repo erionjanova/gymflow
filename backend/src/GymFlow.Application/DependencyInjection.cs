@@ -1,4 +1,7 @@
 using GymFlow.Application.Auth;
+using GymFlow.Application.Bookings;
+using GymFlow.Application.Classes;
+using GymFlow.Application.Sessions;
 using GymFlow.Application.Gyms;
 using GymFlow.Application.Members;
 using GymFlow.Application.Plans;
@@ -26,6 +29,9 @@ public static class DependencyInjection
         services.AddScoped<PlanService>();
         services.AddScoped<MemberService>();
         services.AddScoped<PlatformService>();
+        services.AddScoped<ClassService>();
+        services.AddScoped<SessionService>();
+        services.AddScoped<BookingService>();
 
         return services;
     }
