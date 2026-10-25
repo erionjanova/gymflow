@@ -83,13 +83,13 @@ export default function GymLayout() {
                   </div>
                   <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted">
                     {gym.address && (
-                      <span className="flex items-center gap-1.5">
+                      <span className="flex min-h-6 items-center gap-1.5">
                         <MapPin className="size-3.5" />
                         {gym.address}
                       </span>
                     )}
                     {gym.phone && (
-                      <a href={`tel:${gym.phone}`} className="flex items-center gap-1.5 hover:text-fg">
+                      <a href={`tel:${gym.phone}`} className="flex min-h-6 items-center gap-1.5 hover:text-fg">
                         <Phone className="size-3.5" />
                         {gym.phone}
                       </a>

@@ -23,7 +23,7 @@ export default function MyGymsPage() {
 
       <div className="mt-8">
         {isLoading ? (
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 [&>*]:min-w-0">
             <Skeleton className="h-28" />
             <Skeleton className="h-28" />
           </div>
@@ -40,7 +40,7 @@ export default function MyGymsPage() {
             }
           />
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 [&>*]:min-w-0">
             {gyms.map((gym) => (
               <Link
                 key={gym.id}
@@ -58,10 +58,10 @@ export default function MyGymsPage() {
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-lg font-semibold">{gym.name}</p>
-                  <div className="mt-1 flex items-center gap-2">
+                  <div className="mt-1 flex min-w-0 items-center gap-2">
                     <RoleBadge role={gym.role} />
                     {gym.isSuspended && <Badge tone="warning">{t("myGyms.suspended")}</Badge>}
-                    <span className="truncate text-xs text-muted">/g/{gym.slug}</span>
+                    <span className="min-w-0 truncate text-xs text-muted">/g/{gym.slug}</span>
                   </div>
                 </div>
                 <ArrowRight className="size-5 text-muted transition-transform group-hover:translate-x-1" />

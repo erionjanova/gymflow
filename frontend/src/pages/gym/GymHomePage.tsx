@@ -30,7 +30,7 @@ export default function GymHomePage() {
         <section>
           <div className="mb-4 flex items-end justify-between gap-4">
             <h2 className="text-2xl font-semibold">{t("gymHome.upcoming")}</h2>
-            <Link to={`/g/${slug}/schedule`} className="flex items-center gap-1 text-sm font-semibold text-accent hover:underline">
+            <Link to={`/g/${slug}/schedule`} className="flex min-h-6 items-center gap-1 text-sm font-semibold text-accent hover:underline">
               {t("gymHome.fullSchedule")}
               <ArrowRight className="size-4" />
             </Link>

@@ -63,7 +63,7 @@ export default function PlatformPage() {
               {gyms?.map((g) => (
                 <tr key={g.id}>
                   <td className="px-5 py-3">
-                    <Link to={`/g/${g.slug}`} className="inline-flex items-center gap-1.5 font-semibold hover:text-accent">
+                    <Link to={`/g/${g.slug}`} className="inline-flex min-h-6 items-center gap-1.5 font-semibold hover:text-accent">
                       {g.name}
                       <ExternalLink className="size-3.5" />
                     </Link>

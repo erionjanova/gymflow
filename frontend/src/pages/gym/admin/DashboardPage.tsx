@@ -48,11 +48,11 @@ export default function DashboardPage() {
 
       <InsightsCharts slug={slug} />
 
-      <div className="grid gap-6 xl:grid-cols-2">
+      <div className="grid gap-6 xl:grid-cols-2 [&>*]:min-w-0">
         <Card className="p-6">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-lg font-semibold">{t("admin.dashboard.nextSessions")}</h2>
-            <Link to={`/g/${slug}/admin/sessions`} className="text-sm font-semibold text-accent hover:underline">
+            <Link to={`/g/${slug}/admin/sessions`} className="inline-flex min-h-6 items-center text-sm font-semibold text-accent hover:underline">
               {t("admin.dashboard.viewAll")}
             </Link>
           </div>

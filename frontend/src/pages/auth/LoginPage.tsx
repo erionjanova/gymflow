@@ -56,7 +56,7 @@ export default function LoginPage() {
           )}
         </Field>
         <div className="-mt-2 text-right">
-          <Link to="/forgot-password" className="text-sm font-medium text-muted hover:text-accent hover:underline">
+          <Link to="/forgot-password" className="inline-flex min-h-6 items-center text-sm font-medium text-muted hover:text-accent hover:underline">
             {t("auth.forgotLink")}
           </Link>
         </div>
