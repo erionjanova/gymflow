@@ -86,6 +86,12 @@
     -webkit-tap-highlight-color: transparent;
   }
 
+  @media (min-width: 1800px) {
+    html {
+      font-size: min(0.8889vw, 24px);
+    }
+  }
+
   body {
     @apply bg-bg text-fg font-sans antialiased;
     transition: background-color 0.25s ease, color 0.25s ease;
