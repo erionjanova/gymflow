@@ -178,6 +178,33 @@ export interface BillingOverview {
   subscriptions: GymSubscription[];
 }
 
+export interface RevenuePoint {
+  month: string;
+  monthlyRecurringRevenue: number;
+}
+
+export interface WeeklyBookings {
+  weekStart: string;
+  attended: number;
+  noShow: number;
+  booked: number;
+}
+
+export interface ClassFill {
+  className: string;
+  sessions: number;
+  booked: number;
+  capacity: number;
+  fillRate: number;
+}
+
+export interface Insights {
+  currency: string;
+  revenue: RevenuePoint[];
+  weeklyBookings: WeeklyBookings[];
+  classFill: ClassFill[];
+}
+
 export interface PlatformGym {
   id: string;
   name: string;

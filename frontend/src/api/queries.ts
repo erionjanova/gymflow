@@ -5,6 +5,7 @@ import type {
   Booking,
   GymClass,
   GymMembership,
+  Insights,
   Invitation,
   InvitationPreview,
   Member,
@@ -31,6 +32,7 @@ export const keys = {
   invitations: (slug: string) => ["gym", slug, "invitations"] as const,
   subscription: (slug: string) => ["gym", slug, "subscription"] as const,
   billing: (slug: string) => ["gym", slug, "billing"] as const,
+  insights: (slug: string) => ["gym", slug, "insights"] as const,
   platform: ["platform"] as const,
 };
 
@@ -122,6 +124,13 @@ export const useBillingOverview = (slug: string) =>
   useQuery({
     queryKey: keys.billing(slug),
     queryFn: () => api.get<BillingOverview>(gymPath(slug, "/admin/billing")),
+  });
+
+export const useInsights = (slug: string) =>
+  useQuery({
+    queryKey: keys.insights(slug),
+    queryFn: () => api.get<Insights>(gymPath(slug, "/admin/insights")),
+    placeholderData: (previous) => previous,
   });
 
 export const usePlatformStats = () =>

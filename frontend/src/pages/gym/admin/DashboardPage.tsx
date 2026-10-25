@@ -9,6 +9,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { PageHeader, StatCard } from "@/components/ui/PageHeader";
 import { formatDate, formatPrice, formatShortDate, formatTime } from "@/lib/format";
 import { useGymContext } from "@/providers/GymProvider";
+import { InsightsCharts } from "./InsightsCharts";
 
 export default function DashboardPage() {
   const { t, i18n } = useTranslation();
@@ -44,6 +45,8 @@ export default function DashboardPage() {
           hint={t("admin.dashboard.fillHint", { booked, count: upcoming.length })}
         />
       </div>
+
+      <InsightsCharts slug={slug} />
 
       <div className="grid gap-6 xl:grid-cols-2">
         <Card className="p-6">

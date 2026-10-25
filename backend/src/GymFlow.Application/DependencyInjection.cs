@@ -5,6 +5,7 @@ using GymFlow.Application.Bookings;
 using GymFlow.Application.Classes;
 using GymFlow.Application.Sessions;
 using GymFlow.Application.Gyms;
+using GymFlow.Application.Insights;
 using GymFlow.Application.Members;
 using GymFlow.Application.Notifications;
 using GymFlow.Application.Plans;
@@ -37,6 +38,7 @@ public static class DependencyInjection
         services.AddScoped<SessionNotifier>();
         services.AddScoped<SessionService>();
         services.AddScoped<BookingService>();
+        services.AddScoped<InsightsService>();
         services.AddScoped<InvitationService>();
         services.AddScoped<BillingService>();
 

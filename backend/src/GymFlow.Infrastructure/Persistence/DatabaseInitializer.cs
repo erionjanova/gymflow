@@ -44,6 +44,7 @@ public class DatabaseInitializer(
         {
             await SeedDemoGymAsync(ct);
             await SeedDemoClassesAsync(ct);
+            await SeedDemoHistoryAsync(ct);
         }
     }
 
@@ -162,6 +163,146 @@ public class DatabaseInitializer(
                 });
             }
         }
+    }
+
+    private static readonly string[] DemoMemberNames =
+    [
+        "Arta Hoxha", "Besnik Gashi", "Dafina Berisha", "Endrit Kelmendi", "Fjolla Rexhepi", "Granit Krasniqi",
+        "Jeta Morina", "Kushtrim Shala", "Liridona Bytyqi", "Mentor Zeka", "Njomza Ahmeti", "Rron Halili"
+    ];
+
+    private async Task SeedDemoHistoryAsync(CancellationToken ct)
+    {
+        var gym = await db.Tenants.SingleOrDefaultAsync(t => t.Slug == DemoSlug, ct);
+        if (gym is null)
+            return;
+
+        var now = timeProvider.GetUtcNow();
+        var classes = await db.GymClasses.IgnoreQueryFilters().Where(c => c.TenantId == gym.Id).ToListAsync(ct);
+        var plans = await db.MembershipPlans.IgnoreQueryFilters().Where(p => p.TenantId == gym.Id).ToListAsync(ct);
+        if (classes.Count == 0 || plans.Count == 0
+            || await db.ClassSessions.IgnoreQueryFilters().AnyAsync(s => s.TenantId == gym.Id && s.StartsAt < now.AddDays(-1), ct))
+            return;
+
+        var random = new Random(2026);
+        var trainer = await db.Users.SingleOrDefaultAsync(u => u.Email == _seed.DemoTrainerEmail.Trim().ToLowerInvariant(), ct);
+        var members = new List<(User User, DateTimeOffset JoinedAt)>();
+
+        for (var i = 0; i < DemoMemberNames.Length; i++)
+        {
+            var name = DemoMemberNames[i];
+            var email = $"{name.Replace(' ', '.').ToLowerInvariant()}@powergym.local";
+            if (await db.Users.AnyAsync(u => u.Email == email, ct))
+                continue;
+
+            var joinedAt = now.AddDays(-170 + i * 13 + random.Next(0, 5));
+            var user = CreateUser(name, email, Guid.NewGuid().ToString("N"));
+            user.CreatedAt = joinedAt;
+            db.Users.Add(user);
+            db.TenantUsers.Add(new TenantUser { TenantId = gym.Id, User = user, Role = TenantRole.Member, CreatedAt = joinedAt });
+            members.Add((user, joinedAt));
+
+            if (i % 4 == 3)
+                continue;
+
+            var plan = plans[i % plans.Count];
+            var startedAt = joinedAt.AddDays(1);
+            var cancelled = i is 1 or 6;
+            var subscription = new MemberSubscription
+            {
+                TenantId = gym.Id,
+                User = user,
+                PlanId = plan.Id,
+                StripeSubscriptionId = $"sub_demo_{gym.Slug}_{i}",
+                Status = cancelled ? SubscriptionStatus.Canceled : SubscriptionStatus.Active,
+                CreatedAt = startedAt,
+                LastEventAt = startedAt
+            };
+            if (cancelled)
+            {
+                subscription.CanceledAt = startedAt.AddDays(55 + random.Next(0, 20));
+                subscription.CurrentPeriodEnd = subscription.CanceledAt;
+            }
+            else
+            {
+                subscription.CurrentPeriodEnd = plan.Interval == BillingInterval.Year
+                    ? startedAt.AddYears(1)
+                    : now.AddDays(random.Next(2, 29));
+            }
+            db.MemberSubscriptions.Add(subscription);
+        }
+
+        var timeZone = GymTime.FindTimeZone(gym.TimeZone);
+        var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(now, timeZone).DateTime);
+        var firstDay = today.AddDays(-56);
+        var schedule = new (string ClassName, DayOfWeek[] Days, TimeOnly Time, bool WithTrainer)[]
+        {
+            ("Yoga Flow", [DayOfWeek.Monday, DayOfWeek.Wednesday], new TimeOnly(18, 0), true),
+            ("HIIT", [DayOfWeek.Tuesday, DayOfWeek.Thursday], new TimeOnly(19, 0), true),
+            ("Spin", [DayOfWeek.Saturday], new TimeOnly(10, 0), false)
+        };
+
+        foreach (var (className, days, time, withTrainer) in schedule)
+        {
+            var gymClass = classes.FirstOrDefault(c => c.Name == className);
+            if (gymClass is null)
+                continue;
+
+            foreach (var startsAt in GymTime.WeeklySlots(firstDay, today, days, time, timeZone).Where(s => s < now.AddHours(-2)))
+            {
+                var session = new ClassSession
+                {
+                    TenantId = gym.Id,
+                    GymClass = gymClass,
+                    Trainer = withTrainer ? trainer : null,
+                    StartsAt = startsAt,
+                    EndsAt = startsAt.AddMinutes(gymClass.DurationMinutes),
+                    Capacity = gymClass.DefaultCapacity
+                };
+                db.ClassSessions.Add(session);
+
+                var progress = (startsAt - now.AddDays(-56)).TotalDays / 56;
+                var eligible = members.Where(m => m.JoinedAt < startsAt).Select(m => m.User).ToList();
+                var wanted = (int)Math.Round(session.Capacity * (0.35 + 0.45 * progress) + random.Next(-2, 3));
+                foreach (var user in eligible.OrderBy(_ => random.Next()).Take(Math.Clamp(wanted, 0, Math.Min(eligible.Count, session.Capacity))))
+                {
+                    var attended = random.NextDouble() < 0.85;
+                    db.Bookings.Add(new Booking
+                    {
+                        TenantId = gym.Id,
+                        Session = session,
+                        User = user,
+                        Status = attended ? BookingStatus.Attended : BookingStatus.NoShow,
+                        CreatedAt = startsAt.AddDays(-2),
+                        AttendanceMarkedAt = session.EndsAt
+                    });
+                    session.BookedCount++;
+                }
+            }
+        }
+
+        var upcoming = await db.ClassSessions.IgnoreQueryFilters()
+            .Where(s => s.TenantId == gym.Id && !s.IsCancelled && s.StartsAt > now && s.StartsAt < now.AddDays(7))
+            .ToListAsync(ct);
+        foreach (var session in upcoming)
+        {
+            var wanted = (int)Math.Round(session.Capacity * (0.4 + random.NextDouble() * 0.4));
+            foreach (var (user, _) in members.OrderBy(_ => random.Next()).Take(Math.Min(wanted, members.Count)))
+            {
+                db.Bookings.Add(new Booking
+                {
+                    TenantId = gym.Id,
+                    SessionId = session.Id,
+                    User = user,
+                    Status = BookingStatus.Booked,
+                    CreatedAt = now.AddHours(-random.Next(1, 72))
+                });
+                session.BookedCount++;
+            }
+        }
+
+        await db.SaveChangesAsync(ct);
+        logger.LogInformation("Created demo history for {Slug}", gym.Slug);
     }
 
     private async Task<User> FindOrCreateDemoUserAsync(string fullName, string email, string password, CancellationToken ct)
