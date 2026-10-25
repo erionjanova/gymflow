@@ -1,5 +1,8 @@
+using GymFlow.Application.Common;
 using GymFlow.Application.Common.Interfaces;
+using GymFlow.Infrastructure.Email;
 using GymFlow.Infrastructure.Identity;
+using GymFlow.Infrastructure.Payments;
 using GymFlow.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -25,9 +28,20 @@ public static class DependencyInjection
             .Validate(o => o.Secret.Length >= 32, "Jwt:Secret must be at least 32 characters.")
             .ValidateOnStart();
         services.Configure<SeedOptions>(configuration.GetSection(SeedOptions.SectionName));
+        services.Configure<AppOptions>(configuration.GetSection(AppOptions.SectionName));
+        services.Configure<SmtpOptions>(configuration.GetSection(SmtpOptions.SectionName));
+        services.Configure<StripeOptions>(configuration.GetSection(StripeOptions.SectionName));
 
         services.AddSingleton<IPasswordHasher, PasswordHasher>();
         services.AddSingleton<IJwtTokenGenerator, JwtTokenGenerator>();
+
+        services.AddSingleton<EmailQueue>();
+        services.AddSingleton<IEmailSender, QueuedEmailSender>();
+        services.AddHostedService<EmailDispatcher>();
+
+        services.AddSingleton<StripePaymentGateway>();
+        services.AddSingleton<IPaymentGateway>(sp => sp.GetRequiredService<StripePaymentGateway>());
+        services.AddScoped<StripeWebhookProcessor>();
 
         return services;
     }

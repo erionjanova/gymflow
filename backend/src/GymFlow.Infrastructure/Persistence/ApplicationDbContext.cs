@@ -23,6 +23,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<GymClass> GymClasses => Set<GymClass>();
     public DbSet<ClassSession> ClassSessions => Set<ClassSession>();
     public DbSet<Booking> Bookings => Set<Booking>();
+    public DbSet<Invitation> Invitations => Set<Invitation>();
+    public DbSet<MemberSubscription> MemberSubscriptions => Set<MemberSubscription>();
 
     private Guid CurrentTenantId => tenantContext.TenantId ?? Guid.Empty;
 
@@ -60,6 +62,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                     new ConflictException("already_member", "This user is already part of the gym."),
                 PostgresErrorCodes.UniqueViolation when pg.ConstraintName == BookingConstraints.OneActivePerUser =>
                     new ConflictException("already_booked", "You already have a spot or a waitlist place in this session."),
+                PostgresErrorCodes.UniqueViolation when pg.ConstraintName == MemberSubscriptionConstraints.UniqueStripeId =>
+                    new ConflictException("subscription_exists", "This subscription is already being recorded."),
                 PostgresErrorCodes.CheckViolation when pg.ConstraintName == ClassSessionConstraints.Counts =>
                     new ConflictException("session_full", "This session is full."),
                 _ => ex
