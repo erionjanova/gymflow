@@ -40,6 +40,7 @@ services:
       Smtp__Port: 1025
       Stripe__SecretKey: ${STRIPE_SECRET_KEY:-}
       Stripe__WebhookSecret: ${STRIPE_WEBHOOK_SECRET:-}
+      Payments__DemoMode: ${DEMO_PAYMENTS:-true}
 
   web:
     build: ./frontend

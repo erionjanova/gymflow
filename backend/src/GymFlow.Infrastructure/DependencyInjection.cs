@@ -40,7 +40,14 @@ public static class DependencyInjection
         services.AddHostedService<EmailDispatcher>();
 
         services.AddSingleton<StripePaymentGateway>();
-        services.AddSingleton<IPaymentGateway>(sp => sp.GetRequiredService<StripePaymentGateway>());
+        services.AddSingleton<DemoPaymentGateway>();
+        services.AddSingleton<IPaymentGateway>(sp =>
+        {
+            var stripe = sp.GetRequiredService<StripePaymentGateway>();
+            return !stripe.IsConfigured && configuration.GetValue<bool>("Payments:DemoMode")
+                ? sp.GetRequiredService<DemoPaymentGateway>()
+                : stripe;
+        });
         services.AddScoped<StripeWebhookProcessor>();
 
         return services;

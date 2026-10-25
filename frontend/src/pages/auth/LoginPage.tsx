@@ -1,4 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -14,12 +15,20 @@ import { AuthLayout } from "./AuthLayout";
 
 type LoginForm = z.infer<typeof loginSchema>;
 
+const DEMO_ACCOUNTS = [
+  { role: "admin", name: "Erion Janova", email: "admin@gymflow.local", password: "Admin12345" },
+  { role: "owner", name: "Driton Berisha", email: "owner@powergym.local", password: "Owner12345" },
+  { role: "trainer", name: "Elira Shala", email: "trainer@powergym.local", password: "Trainer12345" },
+  { role: "member", name: "Valon Morina", email: "member@powergym.local", password: "Member12345" },
+] as const;
+
 export default function LoginPage() {
   const { t } = useTranslation();
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [error, setError] = useState<string | null>(null);
+  const [demoLoading, setDemoLoading] = useState<string | null>(null);
 
   const {
     register,
@@ -37,6 +46,12 @@ export default function LoginPage() {
     } catch (e) {
       setError(errorMessage(e));
     }
+  };
+
+  const loginAsDemo = async (account: (typeof DEMO_ACCOUNTS)[number]) => {
+    setDemoLoading(account.email);
+    await onSubmit({ email: account.email, password: account.password });
+    setDemoLoading(null);
   };
 
   return (
@@ -69,11 +84,26 @@ export default function LoginPage() {
             {t("nav.register")}
           </Link>
         </p>
-        <div className="rounded-xl border border-dashed border-line p-4 text-xs text-muted">
-          <p className="font-semibold text-fg">{t("auth.demoTitle")}</p>
-          <p className="mt-1">owner@powergym.local · Owner12345</p>
-          <p>trainer@powergym.local · Trainer12345</p>
-          <p>member@powergym.local · Member12345</p>
+        <div className="rounded-xl border border-dashed border-line p-4">
+          <p className="text-sm font-semibold">{t("auth.demoTitle")}</p>
+          <p className="mt-0.5 text-xs text-muted">{t("auth.demoHint")}</p>
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            {DEMO_ACCOUNTS.map((account) => (
+              <button
+                key={account.email}
+                type="button"
+                disabled={isSubmitting || demoLoading !== null}
+                onClick={() => loginAsDemo(account)}
+                className="flex cursor-pointer items-center justify-between gap-2 rounded-xl border border-line bg-surface px-3 py-2 text-left transition-colors hover:border-accent hover:bg-accent-soft disabled:cursor-default disabled:opacity-60"
+              >
+                <span className="min-w-0">
+                  <span className="block truncate text-sm font-semibold">{t(`auth.demoRoles.${account.role}`)}</span>
+                  <span className="block truncate text-xs text-muted">{account.name}</span>
+                </span>
+                {demoLoading === account.email && <Loader2 className="size-4 shrink-0 animate-spin text-accent" aria-hidden />}
+              </button>
+            ))}
+          </div>
         </div>
       </form>
     </AuthLayout>

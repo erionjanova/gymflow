@@ -2,10 +2,12 @@ using GymFlow.Application.Billing;
 using GymFlow.Application.Bookings;
 using GymFlow.Application.Common;
 using GymFlow.Application.Common.Exceptions;
+using GymFlow.Application.Common.Interfaces;
 using GymFlow.Application.Notifications;
 using GymFlow.Application.Tenancy;
 using GymFlow.Domain.Enums;
 using GymFlow.Domain.Exceptions;
+using GymFlow.Infrastructure.Payments;
 using GymFlow.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -31,7 +33,7 @@ public class BillingTests(PostgresFixture fixture)
     }
 
     private static BillingService Billing(
-        ApplicationDbContext db, Guid? tenantId, Guid? userId, FakePaymentGateway? gateway = null,
+        ApplicationDbContext db, Guid? tenantId, Guid? userId, IPaymentGateway? gateway = null,
         TenantRole role = TenantRole.Member) =>
         new(db, Tenant(tenantId, role), new FakeCurrentUser(userId), gateway ?? new FakePaymentGateway(),
             Options.Create(new AppOptions { FrontendUrl = "http://app.test" }), NullLogger<BillingService>.Instance);
@@ -231,6 +233,46 @@ public class BillingTests(PostgresFixture fixture)
 
         Assert.False(await WebhookAsync(Update(gym, stripeId, "active", T0.AddDays(1))));
         Assert.Equal("Premium", (await MineAsync(gym))!.PlanName);
+    }
+
+    [Fact]
+    public async Task Demo_payments_run_the_whole_membership_flow_without_stripe()
+    {
+        var gym = await fixture.SeedGymAsync("Demo Pay Gym", "Basic", "Premium");
+        var intruder = (await fixture.SeedUsersAsync(gym.TenantId, 1))[0];
+        var gateway = new DemoPaymentGateway(TimeProvider.System);
+
+        string sessionId;
+        await using (var db = fixture.CreateContext(gym.TenantId, TenantRole.Member))
+        {
+            var checkout = await Billing(db, gym.TenantId, gym.MemberId, gateway).StartCheckoutAsync(gym.PlanIds[0], default);
+            Assert.StartsWith("http://app.test/g/", checkout.Url);
+            sessionId = checkout.Url.Split("session_id=")[1];
+            Assert.StartsWith(DemoPaymentGateway.SessionPrefix, sessionId);
+        }
+
+        await using (var db = fixture.CreateContext(gym.TenantId, TenantRole.Member))
+        {
+            var ex = await Assert.ThrowsAsync<ForbiddenException>(() =>
+                Billing(db, gym.TenantId, intruder, gateway).SyncCheckoutAsync(sessionId, default));
+            Assert.Equal("checkout_not_yours", ex.Code);
+        }
+
+        await using (var db = fixture.CreateContext(gym.TenantId, TenantRole.Member))
+        {
+            var mine = await Billing(db, gym.TenantId, gym.MemberId, gateway).SyncCheckoutAsync(sessionId, default);
+            Assert.Equal(("Basic", SubscriptionStatus.Active), (mine!.PlanName, mine.Status));
+            Assert.True(mine.CurrentPeriodEnd > DateTimeOffset.UtcNow.AddDays(27));
+        }
+
+        await using (var db = fixture.CreateContext(gym.TenantId, TenantRole.Member))
+            await Billing(db, gym.TenantId, gym.MemberId, gateway).SetCancelAtPeriodEndAsync(true, default);
+
+        await using (var db = fixture.CreateContext(gym.TenantId, TenantRole.Member))
+        {
+            var switched = await Billing(db, gym.TenantId, gym.MemberId, gateway).ChangePlanAsync(gym.PlanIds[1], default);
+            Assert.Equal(("Premium", false), (switched.PlanName, switched.CancelAtPeriodEnd));
+        }
     }
 
     [Fact]

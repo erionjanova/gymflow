@@ -63,9 +63,9 @@ export default function MembershipPage() {
 
   useEffect(() => {
     if (!awaitingPayment || !hasAccess) return;
-    toast.success(t("membership.welcome"));
+    toast.success(sessionId?.startsWith("cs_demo_") ? t("membership.demoWelcome") : t("membership.welcome"));
     setParams({}, { replace: true });
-  }, [awaitingPayment, hasAccess, setParams, t]);
+  }, [awaitingPayment, hasAccess, sessionId, setParams, t]);
 
   const startCheckout = useMutation({
     mutationFn: (planId: string) => api.post<{ url: string }>(gymPath(slug, `/plans/${planId}/checkout`)),
