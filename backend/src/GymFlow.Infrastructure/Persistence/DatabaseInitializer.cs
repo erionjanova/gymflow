@@ -73,7 +73,7 @@ public class DatabaseInitializer(
 
         var ownerEmail = _seed.DemoOwnerEmail.Trim().ToLowerInvariant();
         var owner = await db.Users.SingleOrDefaultAsync(u => u.Email == ownerEmail, ct)
-            ?? CreateUser("Arben Krasniqi", ownerEmail, _seed.DemoOwnerPassword);
+            ?? CreateUser("Driton Berisha", ownerEmail, _seed.DemoOwnerPassword);
 
         var gym = new Tenant
         {
@@ -113,8 +113,8 @@ public class DatabaseInitializer(
         if (gym is null || await db.GymClasses.IgnoreQueryFilters().AnyAsync(c => c.TenantId == gym.Id, ct))
             return;
 
-        var trainer = await FindOrCreateDemoUserAsync("Ana Gashi", _seed.DemoTrainerEmail, _seed.DemoTrainerPassword, ct);
-        var member = await FindOrCreateDemoUserAsync("Blerim Hoxha", _seed.DemoMemberEmail, _seed.DemoMemberPassword, ct);
+        var trainer = await FindOrCreateDemoUserAsync("Elira Shala", _seed.DemoTrainerEmail, _seed.DemoTrainerPassword, ct);
+        var member = await FindOrCreateDemoUserAsync("Valon Morina", _seed.DemoMemberEmail, _seed.DemoMemberPassword, ct);
         await EnsureMembershipAsync(gym, trainer, TenantRole.Trainer, ct);
         await EnsureMembershipAsync(gym, member, TenantRole.Member, ct);
 
