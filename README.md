@@ -2,7 +2,7 @@
 
 **Run your gym. Not spreadsheets.**
 
-**Live demo: [erion-gymflow.onrender.com](https://erion-gymflow.onrender.com/login)**, one click on any demo account and you're in. It runs on a free server that sleeps when nobody is using it, so the first visit can take up to a minute to wake up. The demo resets itself every 24 hours, so feel free to click around and break things.
+**Live demo: [erion-gymflow.onrender.com](https://erion-gymflow.onrender.com/login)**, one click on any demo account and you're in. It runs on a free server that is kept awake during the day (Central European time); at night it sleeps, so the first visit can take up to a minute to wake up. The demo resets itself every 24 hours, so feel free to click around and break things.
 
 GymFlow is a multi-tenant SaaS for gyms. Every gym that signs up gets its own branded page where members subscribe to a plan, book classes and join waitlists, trainers take attendance, and the owner sees how the business is doing.
 
