@@ -90,9 +90,10 @@ public class AuthService(
         var userId = currentUser.RequireUserId();
 
         return await db.TenantUsers.IgnoreQueryFilters().AsNoTracking()
-            .Where(tu => tu.UserId == userId && !tu.Tenant!.IsSuspended)
-            .OrderBy(tu => tu.Tenant!.Name)
-            .Select(tu => new MyGymDto(tu.TenantId, tu.Tenant!.Name, tu.Tenant.Slug, tu.Tenant.BrandColor, tu.Role))
+            .Where(tu => tu.UserId == userId)
+            .OrderBy(tu => tu.Tenant!.IsSuspended)
+            .ThenBy(tu => tu.Tenant!.Name)
+            .Select(tu => new MyGymDto(tu.TenantId, tu.Tenant!.Name, tu.Tenant.Slug, tu.Tenant.BrandColor, tu.Role, tu.Tenant.IsSuspended))
             .ToListAsync(ct);
     }
 

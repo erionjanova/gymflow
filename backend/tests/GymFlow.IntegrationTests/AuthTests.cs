@@ -1,9 +1,12 @@
 using FluentValidation;
 using GymFlow.Application.Auth;
 using GymFlow.Application.Common.Exceptions;
+using GymFlow.Domain.Entities;
+using GymFlow.Domain.Enums;
 using GymFlow.Domain.Exceptions;
 using GymFlow.Infrastructure.Identity;
 using GymFlow.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
 namespace GymFlow.IntegrationTests;
@@ -73,5 +76,26 @@ public class AuthTests(PostgresFixture fixture)
         await using var db = fixture.CreateContext();
         await Assert.ThrowsAsync<ValidationException>(() =>
             Service(db, userId).ChangePasswordAsync(new ChangePasswordRequest("OldPassword1", "OldPassword1"), default));
+    }
+
+    [Fact]
+    public async Task My_gyms_keeps_suspended_gyms_and_flags_them()
+    {
+        var active = await fixture.SeedGymAsync("Zeta Active");
+        var suspended = await fixture.SeedGymAsync("Alpha Suspended");
+
+        await using (var db = fixture.CreateContext())
+        {
+            db.TenantUsers.Add(new TenantUser { TenantId = suspended.TenantId, UserId = active.OwnerId, Role = TenantRole.Member });
+            (await db.Tenants.SingleAsync(t => t.Id == suspended.TenantId)).IsSuspended = true;
+            await db.SaveChangesAsync();
+        }
+
+        await using var check = fixture.CreateContext();
+        var gyms = await Service(check, active.OwnerId).GetMyGymsAsync(default);
+
+        Assert.Collection(gyms,
+            g => Assert.Equal(("Zeta Active", false), (g.Name, g.IsSuspended)),
+            g => Assert.Equal(("Alpha Suspended", true), (g.Name, g.IsSuspended)));
     }
 }

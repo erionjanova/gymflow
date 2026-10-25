@@ -1,5 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { toast } from "sonner";
 import i18n from "@/i18n";
 import { api, setUnauthorizedHandler, tokenStore } from "@/lib/api";
 import type { AuthResponse, Language, User } from "@/lib/types";
@@ -45,7 +46,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    setUnauthorizedHandler(logout);
+    setUnauthorizedHandler(() => {
+      if (!tokenStore.get()) return;
+      logout();
+      toast(i18n.t("auth.sessionExpired"));
+    });
     return () => setUnauthorizedHandler(null);
   }, [logout]);
 

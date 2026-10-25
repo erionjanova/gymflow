@@ -61,6 +61,7 @@ const en = {
     haveAccount: "Already have an account?",
     welcome: "Welcome, {{name}}!",
     loggedOut: "You've been logged out.",
+    sessionExpired: "Your session has expired. Please log in again.",
     sideTitle: "Built for gyms that are growing.",
     sideText: "Members book in two taps. You see who's coming, who's paying and what's next.",
     demoTitle: "Demo accounts",
@@ -103,6 +104,7 @@ const en = {
     ownerText: "Put your gym on GymFlow: classes, bookings and memberships in one place.",
     ownerCta: "Register your gym",
     visitDemo: "Visit the demo gym",
+    suspended: "Suspended",
   },
   createGym: {
     title: "Create your gym",
@@ -118,7 +120,7 @@ const en = {
     joined: "You joined {{name}}.",
     signUpToJoin: "Sign up to join",
     suspendedTitle: "This gym is unavailable",
-    suspendedText: "The gym is temporarily suspended. Please contact them directly.",
+    suspendedText: "This gym is temporarily suspended, so classes can't be booked right now. If you run this gym, contact GymFlow support.",
     tabs: { label: "Gym sections", overview: "Overview", schedule: "Schedule", bookings: "My bookings", membership: "Membership", admin: "Manage" },
   },
   gymHome: {

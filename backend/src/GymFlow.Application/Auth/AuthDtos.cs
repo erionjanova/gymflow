@@ -30,7 +30,7 @@ public record UserDto(
 
 public record AuthResponse(string Token, DateTimeOffset ExpiresAt, UserDto User);
 
-public record MyGymDto(Guid Id, string Name, string Slug, string BrandColor, TenantRole Role);
+public record MyGymDto(Guid Id, string Name, string Slug, string BrandColor, TenantRole Role, bool IsSuspended);
 
 public record ForgotPasswordRequest(string Email);
 

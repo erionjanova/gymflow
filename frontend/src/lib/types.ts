@@ -27,6 +27,7 @@ export interface MyGym {
   slug: string;
   brandColor: string;
   role: TenantRole;
+  isSuspended: boolean;
 }
 
 export interface Gym {

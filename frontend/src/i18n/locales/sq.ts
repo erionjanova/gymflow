@@ -63,6 +63,7 @@ const sq: Translation = {
     haveAccount: "Ke tashmë llogari?",
     welcome: "Mirë se erdhe, {{name}}!",
     loggedOut: "Dole nga llogaria.",
+    sessionExpired: "Seanca jote ka skaduar. Hyr përsëri.",
     sideTitle: "E ndërtuar për palestra që rriten.",
     sideText: "Anëtarët rezervojnë me dy prekje. Ti sheh kush vjen, kush paguan dhe çfarë vjen më pas.",
     demoTitle: "Llogari demo",
@@ -105,6 +106,7 @@ const sq: Translation = {
     ownerText: "Sill palestrën tënde në GymFlow: klasa, rezervime dhe abonime në një vend.",
     ownerCta: "Regjistro palestrën",
     visitDemo: "Vizito palestrën demo",
+    suspended: "Pezulluar",
   },
   createGym: {
     title: "Krijo palestrën tënde",
@@ -120,7 +122,7 @@ const sq: Translation = {
     joined: "U bashkove me {{name}}.",
     signUpToJoin: "Regjistrohu për t'u bashkuar",
     suspendedTitle: "Kjo palestër nuk është e disponueshme",
-    suspendedText: "Palestra është pezulluar përkohësisht. Ju lutemi kontaktoni drejtpërdrejt me ta.",
+    suspendedText: "Kjo palestër është pezulluar përkohësisht, prandaj klasat nuk mund të rezervohen tani. Nëse e drejton këtë palestër, kontakto mbështetjen e GymFlow.",
     tabs: { label: "Seksionet e palestrës", overview: "Përmbledhje", schedule: "Orari", bookings: "Rezervimet e mia", membership: "Anëtarësimi", admin: "Menaxho" },
   },
   gymHome: {

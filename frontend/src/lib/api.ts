@@ -52,6 +52,8 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
     throw new ApiError(0, "network_error", "Network error");
   }
 
+  if (token && response.headers.get("X-Session-Expired")) onUnauthorized?.();
+
   if (response.status === 204) return undefined as T;
 
   const data = await response.json().catch(() => null);

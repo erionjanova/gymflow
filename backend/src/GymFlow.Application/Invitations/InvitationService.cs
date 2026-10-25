@@ -167,7 +167,7 @@ public class InvitationService(
         }
 
         return new AcceptInvitationResponse(
-            new MyGymDto(gym.Id, gym.Name, gym.Slug, gym.BrandColor, membership.Role), auth);
+            new MyGymDto(gym.Id, gym.Name, gym.Slug, gym.BrandColor, membership.Role, gym.IsSuspended), auth);
     }
 
     private async Task<string> SendAsync(Invitation invitation, string token, CancellationToken ct)
