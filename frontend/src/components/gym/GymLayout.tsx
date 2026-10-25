@@ -28,7 +28,7 @@ export default function GymLayout() {
   const { user } = useAuth();
   const location = useLocation();
   const queryClient = useQueryClient();
-  const { data, isLoading, error } = useGym(slug);
+  const { data, isPending, error } = useGym(slug);
 
   const join = useMutation({
     mutationFn: () => api.post<GymMembership>(gymPath(slug, "/join")),
@@ -40,7 +40,7 @@ export default function GymLayout() {
     onError: (e) => toast.error(errorMessage(e)),
   });
 
-  if (isLoading) return <FullPageSpinner />;
+  if (isPending) return <FullPageSpinner />;
 
   if (error instanceof ApiError && error.code === "gym_suspended") {
     return (
