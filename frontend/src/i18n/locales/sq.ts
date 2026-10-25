@@ -268,6 +268,8 @@ const sq: Translation = {
       fillDetail_one: "{{booked}} nga {{capacity}} vende · {{count}} seancë",
       fillDetail_other: "{{booked}} nga {{capacity}} vende · {{count}} seanca",
       noClasses: "Asnjë klasë nuk u mbajt në 30 ditët e fundit.",
+      noRevenue: "Ende pa të ardhura. Shfaqen këtu pas pagesës së parë të një anëtarësimi.",
+      noBookings: "Ende pa rezervime në 8 javët e fundit.",
     },
     dashboard: {
       title: "Paneli",

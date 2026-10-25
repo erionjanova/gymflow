@@ -145,6 +145,10 @@ function SessionFormModal({
       setMode("single");
       setClassId("");
       setTrainerId("");
+      setDate(addDays(todayIn(gym.timeZone), 1));
+      setToDate(addDays(todayIn(gym.timeZone), 28));
+      setTime("18:00");
+      setDays(["Monday", "Wednesday"]);
       setCapacity("");
     }
   }
@@ -216,6 +220,7 @@ function SessionFormModal({
               <button
                 key={m}
                 type="button"
+                aria-pressed={mode === m}
                 onClick={() => setMode(m)}
                 className={cn(
                   "flex cursor-pointer items-center justify-center gap-2 rounded-xl border px-3 py-3 text-sm font-medium transition-colors",

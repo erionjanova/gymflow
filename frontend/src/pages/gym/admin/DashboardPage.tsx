@@ -21,7 +21,7 @@ export default function DashboardPage() {
 
   const { data: billing, isLoading } = useBillingOverview(slug);
   const { data: members } = useMembers(slug);
-  const { data: sessions } = useStaffSessions(slug, range.from, range.to);
+  const { data: sessions, isLoading: sessionsLoading } = useStaffSessions(slug, range.from, range.to);
 
   const upcoming = (sessions ?? []).filter((s) => !s.isCancelled);
   const booked = upcoming.reduce((sum, s) => sum + s.bookedCount, 0);
@@ -56,7 +56,9 @@ export default function DashboardPage() {
               {t("admin.dashboard.viewAll")}
             </Link>
           </div>
-          {!upcoming.length ? (
+          {sessionsLoading ? (
+            <Skeleton className="h-32" />
+          ) : !upcoming.length ? (
             <p className="text-sm text-muted">{t("schedule.empty")}</p>
           ) : (
             <ul className="divide-y divide-line">

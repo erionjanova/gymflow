@@ -25,6 +25,9 @@ export function InsightsCharts({ slug }: { slug: string }) {
   const monthTitle = (date: string) => formatCalendarDate(date, lang, { month: "long", year: "numeric" });
   const weekLabel = (date: string) => formatCalendarDate(date, lang, { day: "numeric", month: "short" });
 
+  const noRevenue = data.revenue.every((p) => p.monthlyRecurringRevenue === 0);
+  const noBookings = data.weeklyBookings.every((w) => w.attended + w.noShow + w.booked === 0);
+
   const revenueSeries: ChartSeries = { key: "mrr", label: t("admin.insights.revenueSeries"), color: "var(--series-1)" };
   const bookingSeries: ChartSeries[] = [
     { key: "attended", label: t("admin.insights.attended"), color: "var(--series-1)" },
@@ -45,16 +48,20 @@ export function InsightsCharts({ slug }: { slug: string }) {
             />
           }
         >
-          <AreaTrend
-            series={revenueSeries}
-            format={money}
-            points={data.revenue.map((p) => ({
-              key: p.month,
-              label: monthLabel(p.month),
-              title: monthTitle(p.month),
-              value: p.monthlyRecurringRevenue,
-            }))}
-          />
+          {noRevenue ? (
+            <p className="text-sm text-muted">{t("admin.insights.noRevenue")}</p>
+          ) : (
+            <AreaTrend
+              series={revenueSeries}
+              format={money}
+              points={data.revenue.map((p) => ({
+                key: p.month,
+                label: monthLabel(p.month),
+                title: monthTitle(p.month),
+                value: p.monthlyRecurringRevenue,
+              }))}
+            />
+          )}
         </ChartCard>
 
         <ChartCard
@@ -73,16 +80,20 @@ export function InsightsCharts({ slug }: { slug: string }) {
             />
           }
         >
-          <StackedColumns
-            series={bookingSeries}
-            totalLabel={t("admin.insights.total")}
-            columns={data.weeklyBookings.map((w) => ({
-              key: w.weekStart,
-              label: weekLabel(w.weekStart),
-              title: t("admin.insights.weekOf", { date: weekLabel(w.weekStart) }),
-              values: { attended: w.attended, noShow: w.noShow, booked: w.booked },
-            }))}
-          />
+          {noBookings ? (
+            <p className="text-sm text-muted">{t("admin.insights.noBookings")}</p>
+          ) : (
+            <StackedColumns
+              series={bookingSeries}
+              totalLabel={t("admin.insights.total")}
+              columns={data.weeklyBookings.map((w) => ({
+                key: w.weekStart,
+                label: weekLabel(w.weekStart),
+                title: t("admin.insights.weekOf", { date: weekLabel(w.weekStart) }),
+                values: { attended: w.attended, noShow: w.noShow, booked: w.booked },
+              }))}
+            />
+          )}
         </ChartCard>
       </div>
 

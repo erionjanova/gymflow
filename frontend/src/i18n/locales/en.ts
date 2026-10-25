@@ -266,6 +266,8 @@ const en = {
       fillDetail_one: "{{booked}} of {{capacity}} spots · {{count}} session",
       fillDetail_other: "{{booked}} of {{capacity}} spots · {{count}} sessions",
       noClasses: "No classes ran in the last 30 days.",
+      noRevenue: "No revenue yet. It shows up here after the first membership payment.",
+      noBookings: "No bookings in the last 8 weeks yet.",
     },
     dashboard: {
       title: "Dashboard",
