@@ -1,4 +1,4 @@
-import { Building2, Dumbbell, LogOut, Menu, Shield, X } from "lucide-react";
+import { Dumbbell, LogOut, Menu, Shield, X } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -43,7 +43,6 @@ export function Navbar() {
     ? []
     : [
         { to: "/gyms", label: t("nav.myGyms"), icon: Dumbbell },
-        { to: "/gyms/new", label: t("nav.createGym"), icon: Building2 },
         ...(isPlatformAdmin ? [{ to: "/platform", label: t("nav.platform"), icon: Shield }] : []),
       ];
 

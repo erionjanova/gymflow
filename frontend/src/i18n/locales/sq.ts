@@ -69,7 +69,10 @@ const sq: Translation = {
   myGyms: {
     title: "Përshëndetje {{name}}",
     subtitle: "Palestrat ku stërvitesh ose që menaxhon.",
-    empty: "Nuk je pjesë e asnjë palestre ende. Krijo një ose bashkohu nga faqja e një palestre.",
+    empty: "Nuk je pjesë e asnjë palestre ende. Hap faqen e palestrës tënde për t'u bashkuar, ose përdor linkun e ftesës që të ka dërguar palestra.",
+    ownerTitle: "Ke një palestër?",
+    ownerText: "Sill palestrën tënde në GymFlow: klasa, rezervime dhe abonime në një vend.",
+    ownerCta: "Regjistro palestrën",
     visitDemo: "Vizito palestrën demo",
   },
   createGym: {

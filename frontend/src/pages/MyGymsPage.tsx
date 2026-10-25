@@ -1,4 +1,4 @@
-import { ArrowRight, Dumbbell, Plus } from "lucide-react";
+import { ArrowRight, Building2, Dumbbell } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router";
 import { useMyGyms } from "@/api/queries";
@@ -14,19 +14,11 @@ export default function MyGymsPage() {
   const { t } = useTranslation();
   const { user } = useAuth();
   const { data: gyms, isLoading, error, refetch } = useMyGyms();
+  const ownsGym = gyms?.some((g) => g.role === "Owner") ?? false;
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-10">
-      <PageHeader
-        title={t("myGyms.title", { name: user?.fullName.split(" ")[0] })}
-        subtitle={t("myGyms.subtitle")}
-        actions={
-          <Link to="/gyms/new" className={buttonClass("primary")}>
-            <Plus className="size-4" />
-            {t("nav.createGym")}
-          </Link>
-        }
-      />
+      <PageHeader title={t("myGyms.title", { name: user?.fullName.split(" ")[0] })} subtitle={t("myGyms.subtitle")} />
 
       <div className="mt-8">
         {isLoading ? (
@@ -73,6 +65,22 @@ export default function MyGymsPage() {
           </div>
         )}
       </div>
+
+      {!isLoading && !error && !ownsGym && (
+        <div className="mt-12 flex flex-col gap-4 rounded-2xl bg-surface-2 p-5 sm:flex-row sm:items-center">
+          <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-surface text-muted">
+            <Building2 className="size-5" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="font-semibold">{t("myGyms.ownerTitle")}</p>
+            <p className="text-sm text-muted">{t("myGyms.ownerText")}</p>
+          </div>
+          <Link to="/gyms/new" className={buttonClass("ghost", "sm")}>
+            {t("myGyms.ownerCta")}
+            <ArrowRight className="size-4" />
+          </Link>
+        </div>
+      )}
     </div>
   );
 }

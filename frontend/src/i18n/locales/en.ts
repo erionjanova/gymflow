@@ -67,7 +67,10 @@ const en = {
   myGyms: {
     title: "Hi {{name}}",
     subtitle: "Gyms you train at or manage.",
-    empty: "You're not part of any gym yet. Create one or join a gym from its page.",
+    empty: "You're not part of any gym yet. Open your gym's page to join, or use the invite link your gym sent you.",
+    ownerTitle: "Do you run a gym?",
+    ownerText: "Put your gym on GymFlow: classes, bookings and memberships in one place.",
+    ownerCta: "Register your gym",
     visitDemo: "Visit the demo gym",
   },
   createGym: {
