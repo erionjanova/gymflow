@@ -66,7 +66,8 @@ public class DatabaseInitializer(
             .Select(t => $"\"{t.GetTableName()}\"")
             .Distinct();
 
-        await db.Database.ExecuteSqlRawAsync($"TRUNCATE TABLE {string.Join(", ", tables)} CASCADE", ct);
+        var truncate = $"TRUNCATE TABLE {string.Join(", ", tables)} CASCADE";
+        await db.Database.ExecuteSqlRawAsync(truncate, ct);
         db.ChangeTracker.Clear();
         logger.LogInformation("Demo data was seeded at {SeededAt}, older than {Hours}h, so it was reset", seededAt, _seed.DemoResetHours);
     }

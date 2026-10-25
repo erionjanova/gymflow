@@ -14,8 +14,11 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
-        var connectionString = PostgresConnectionString.Normalize(configuration.GetConnectionString("Database")
-            ?? throw new InvalidOperationException("Connection string 'Database' is missing."));
+        var configured = configuration.GetConnectionString("Database");
+        if (string.IsNullOrWhiteSpace(configured))
+            throw new InvalidOperationException(
+                "Connection string 'Database' is missing. Set ConnectionStrings__Database to your Postgres connection string.");
+        var connectionString = PostgresConnectionString.Normalize(configured);
 
         services.AddDbContext<ApplicationDbContext>(options => options
             .UseNpgsql(connectionString)
