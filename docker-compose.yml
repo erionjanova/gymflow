@@ -1,0 +1,52 @@
+name: gymflow-demo
+
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-gymflow}
+      POSTGRES_USER: ${POSTGRES_USER:-gymflow}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-gymflow}
+    volumes:
+      - gymflow-demo-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-gymflow} -d ${POSTGRES_DB:-gymflow}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  mailpit:
+    image: axllent/mailpit:latest
+    ports:
+      - "${MAIL_PORT:-8025}:8025"
+
+  api:
+    build: ./backend
+    depends_on:
+      db:
+        condition: service_healthy
+      mailpit:
+        condition: service_started
+    environment:
+      ConnectionStrings__Database: Host=db;Port=5432;Database=${POSTGRES_DB:-gymflow};Username=${POSTGRES_USER:-gymflow};Password=${POSTGRES_PASSWORD:-gymflow}
+      Jwt__Secret: ${JWT_SECRET:-demo-only-secret-change-me-before-going-online-0123456789}
+      App__FrontendUrl: http://localhost:${WEB_PORT:-8080}
+      Cors__AllowedOrigins__0: http://localhost:${WEB_PORT:-8080}
+      Seed__AdminEmail: ${ADMIN_EMAIL:-admin@gymflow.local}
+      Seed__AdminPassword: ${ADMIN_PASSWORD:-Admin12345}
+      Seed__AdminFullName: ${ADMIN_NAME:-Erion Janova}
+      Seed__DemoGym: ${DEMO_GYM:-true}
+      Smtp__Host: mailpit
+      Smtp__Port: 1025
+      Stripe__SecretKey: ${STRIPE_SECRET_KEY:-}
+      Stripe__WebhookSecret: ${STRIPE_WEBHOOK_SECRET:-}
+
+  web:
+    build: ./frontend
+    depends_on:
+      - api
+    ports:
+      - "${WEB_PORT:-8080}:80"
+
+volumes:
+  gymflow-demo-data:
