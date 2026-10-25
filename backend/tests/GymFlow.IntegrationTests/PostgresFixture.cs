@@ -64,6 +64,43 @@ public class PostgresFixture : IAsyncLifetime
 
         return new SeededGym(gym.Id, owner.Id, member.Id, gym.Plans.Select(p => p.Id).ToList());
     }
+
+    public async Task<IReadOnlyList<Guid>> SeedUsersAsync(Guid tenantId, int count, TenantRole role = TenantRole.Member)
+    {
+        await using var db = CreateContext(tenantId);
+
+        var users = Enumerable.Range(0, count)
+            .Select(i => new User { FullName = $"{role} {i}", Email = $"{Guid.NewGuid():N}@test.local", PasswordHash = "x" })
+            .ToList();
+
+        db.Users.AddRange(users);
+        db.TenantUsers.AddRange(users.Select(u => new TenantUser { User = u, Role = role }));
+        await db.SaveChangesAsync();
+
+        return users.Select(u => u.Id).ToList();
+    }
+
+    public async Task<Guid> SeedSessionAsync(Guid tenantId, int capacity, Guid? trainerId = null, TimeSpan? startsIn = null)
+    {
+        await using var db = CreateContext(tenantId);
+
+        var gymClass = new GymClass { Name = "Test class", DurationMinutes = 60, DefaultCapacity = capacity };
+        var startsAt = DateTimeOffset.UtcNow.Add(startsIn ?? TimeSpan.FromDays(1));
+        var session = new ClassSession
+        {
+            GymClass = gymClass,
+            TrainerId = trainerId,
+            StartsAt = startsAt,
+            EndsAt = startsAt.AddHours(1),
+            Capacity = capacity
+        };
+
+        db.GymClasses.Add(gymClass);
+        db.ClassSessions.Add(session);
+        await db.SaveChangesAsync();
+
+        return session.Id;
+    }
 }
 
 public record SeededGym(Guid TenantId, Guid OwnerId, Guid MemberId, IReadOnlyList<Guid> PlanIds);
