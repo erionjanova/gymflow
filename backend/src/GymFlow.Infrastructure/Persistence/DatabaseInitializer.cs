@@ -22,6 +22,7 @@ public class SeedOptions
     public string DemoTrainerPassword { get; set; } = "Trainer12345";
     public string DemoMemberEmail { get; set; } = "member@powergym.local";
     public string DemoMemberPassword { get; set; } = "Member12345";
+    public int DemoResetHours { get; set; }
 }
 
 public class DatabaseInitializer(
@@ -38,6 +39,7 @@ public class DatabaseInitializer(
     public async Task InitializeAsync(CancellationToken ct = default)
     {
         await db.Database.MigrateAsync(ct);
+        await ResetStaleDemoAsync(ct);
 
         await SeedPlatformAdminAsync(ct);
         if (_seed.DemoGym)
@@ -46,6 +48,27 @@ public class DatabaseInitializer(
             await SeedDemoClassesAsync(ct);
             await SeedDemoHistoryAsync(ct);
         }
+    }
+
+    private async Task ResetStaleDemoAsync(CancellationToken ct)
+    {
+        if (!_seed.DemoGym || _seed.DemoResetHours <= 0)
+            return;
+
+        var seededAt = await db.Users.Where(u => u.IsPlatformAdmin)
+            .Select(u => (DateTimeOffset?)u.CreatedAt)
+            .MinAsync(ct);
+        if (seededAt is null || timeProvider.GetUtcNow() - seededAt < TimeSpan.FromHours(_seed.DemoResetHours))
+            return;
+
+        var tables = db.Model.GetEntityTypes()
+            .Where(t => !t.IsOwned() && t.BaseType is null && t.GetTableName() is not null)
+            .Select(t => $"\"{t.GetTableName()}\"")
+            .Distinct();
+
+        await db.Database.ExecuteSqlRawAsync($"TRUNCATE TABLE {string.Join(", ", tables)} CASCADE", ct);
+        db.ChangeTracker.Clear();
+        logger.LogInformation("Demo data was seeded at {SeededAt}, older than {Hours}h, so it was reset", seededAt, _seed.DemoResetHours);
     }
 
     private async Task SeedPlatformAdminAsync(CancellationToken ct)

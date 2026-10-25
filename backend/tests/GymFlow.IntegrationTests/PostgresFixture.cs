@@ -4,6 +4,7 @@ using GymFlow.Domain.Entities;
 using GymFlow.Domain.Enums;
 using GymFlow.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using Testcontainers.PostgreSql;
 
 namespace GymFlow.IntegrationTests;
@@ -32,6 +33,17 @@ public class PostgresFixture : IAsyncLifetime
         }
 
         return CreateContextFor(tenantContext);
+    }
+
+    public ApplicationDbContext CreateContextForDatabase(string database)
+    {
+        var connection = new NpgsqlConnectionStringBuilder(_container.GetConnectionString()) { Database = database };
+        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+            .UseNpgsql(connection.ConnectionString)
+            .UseSnakeCaseNamingConvention()
+            .Options;
+
+        return new ApplicationDbContext(options, new TenantContext());
     }
 
     public ApplicationDbContext CreateContextFor(TenantContext tenantContext)

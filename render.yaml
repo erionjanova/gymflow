@@ -24,5 +24,7 @@ services:
         value: Erion Janova
       - key: Seed__DemoGym
         value: "true"
+      - key: Seed__DemoResetHours
+        value: "24"
       - key: Payments__DemoMode
         value: "true"
