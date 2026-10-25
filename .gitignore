@@ -1,0 +1,24 @@
+# .NET build output
+bin/
+obj/
+[Dd]ebug/
+[Rr]elease/
+TestResults/
+*.user
+*.suo
+
+# IDE
+.vs/
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+
+# Local config / secrets
+appsettings.*.local.json
+*.env
+.env*
+
+# OS
+.DS_Store
+Thumbs.db
