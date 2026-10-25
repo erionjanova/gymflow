@@ -22,3 +22,8 @@ appsettings.*.local.json
 # OS
 .DS_Store
 Thumbs.db
+
+# Frontend
+node_modules/
+dist/
+*.local

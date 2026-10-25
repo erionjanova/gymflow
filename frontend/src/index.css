@@ -1,0 +1,118 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --bg: #f7f8f6;
+  --surface: #ffffff;
+  --surface-2: #eff1ec;
+  --text: #161a14;
+  --muted: #6b7266;
+  --border: #e1e5dc;
+  --accent: #4d7c0f;
+  --accent-hover: #3f6212;
+  --accent-soft: #ecf5dc;
+  --accent-fg: #ffffff;
+  --success: #15803d;
+  --success-soft: #dcfce7;
+  --danger: #b91c1c;
+  --danger-soft: #fee2e2;
+  --warning: #b45309;
+  --warning-soft: #fef3c7;
+  --ring: rgb(77 124 15 / 0.3);
+  color-scheme: light;
+}
+
+.dark {
+  --bg: #0a0c09;
+  --surface: #121510;
+  --surface-2: #1b1f18;
+  --text: #f3f5f0;
+  --muted: #9ca394;
+  --border: #272c23;
+  --accent: #a3e635;
+  --accent-hover: #bef264;
+  --accent-soft: #1d2a10;
+  --accent-fg: #11160b;
+  --success: #4ade80;
+  --success-soft: #0f2a1a;
+  --danger: #f87171;
+  --danger-soft: #2d1414;
+  --warning: #fbbf24;
+  --warning-soft: #2b2110;
+  --ring: rgb(163 230 53 / 0.35);
+  color-scheme: dark;
+}
+
+.gym-theme {
+  --accent: var(--brand);
+  --accent-hover: color-mix(in oklab, var(--brand) 85%, black);
+  --accent-soft: color-mix(in oklab, var(--brand) 13%, var(--surface));
+  --accent-fg: #ffffff;
+  --ring: color-mix(in oklab, var(--brand) 35%, transparent);
+}
+
+.dark .gym-theme {
+  --accent: color-mix(in oklab, var(--brand) 82%, white);
+  --accent-hover: color-mix(in oklab, var(--brand) 70%, white);
+  --accent-soft: color-mix(in oklab, var(--brand) 20%, var(--surface));
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-fg: var(--text);
+  --color-muted: var(--muted);
+  --color-line: var(--border);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-fg: var(--accent-fg);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-ring: var(--ring);
+
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Space Grotesk", "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    @apply bg-bg text-fg font-sans antialiased;
+    transition: background-color 0.25s ease, color 0.25s ease;
+  }
+
+  h1, h2, h3 {
+    @apply font-display tracking-tight;
+  }
+
+  ::selection {
+    background: var(--accent);
+    color: var(--accent-fg);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+}
+
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+.hero-glow {
+  background:
+    radial-gradient(60% 50% at 75% 15%, color-mix(in oklab, var(--accent) 24%, transparent), transparent 70%),
+    radial-gradient(40% 40% at 5% 85%, color-mix(in oklab, var(--accent) 12%, transparent), transparent 70%);
+}
