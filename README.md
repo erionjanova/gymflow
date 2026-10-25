@@ -96,7 +96,7 @@ Without a Stripe key, the app switches to a demo gateway that follows the same f
 | Backend | .NET 10, ASP.NET Core, EF Core 10, PostgreSQL 17, FluentValidation, Stripe.net, MailKit |
 | Frontend | React 19, TypeScript, Vite, Tailwind CSS 4, TanStack Query, React Hook Form + Zod, i18next |
 | Testing | xUnit, Testcontainers (real Postgres in Docker) |
-| Running it | Docker Compose, nginx |
+| Running it | One Docker image (the API also serves the website), Docker Compose, Render, Neon |
 
 The backend follows Clean Architecture:
 

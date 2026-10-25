@@ -20,34 +20,28 @@ services:
     ports:
       - "${MAIL_PORT:-8025}:8025"
 
-  api:
-    build: ./backend
+  app:
+    build: .
     depends_on:
       db:
         condition: service_healthy
       mailpit:
         condition: service_started
+    ports:
+      - "${WEB_PORT:-8080}:8080"
     environment:
       ConnectionStrings__Database: Host=db;Port=5432;Database=${POSTGRES_DB:-gymflow};Username=${POSTGRES_USER:-gymflow};Password=${POSTGRES_PASSWORD:-gymflow}
       Jwt__Secret: ${JWT_SECRET:-demo-only-secret-change-me-before-going-online-0123456789}
       App__FrontendUrl: http://localhost:${WEB_PORT:-8080}
-      Cors__AllowedOrigins__0: http://localhost:${WEB_PORT:-8080}
       Seed__AdminEmail: ${ADMIN_EMAIL:-admin@gymflow.local}
       Seed__AdminPassword: ${ADMIN_PASSWORD:-Admin12345}
       Seed__AdminFullName: ${ADMIN_NAME:-Erion Janova}
       Seed__DemoGym: ${DEMO_GYM:-true}
       Smtp__Host: mailpit
       Smtp__Port: 1025
+      Payments__DemoMode: ${DEMO_PAYMENTS:-true}
       Stripe__SecretKey: ${STRIPE_SECRET_KEY:-}
       Stripe__WebhookSecret: ${STRIPE_WEBHOOK_SECRET:-}
-      Payments__DemoMode: ${DEMO_PAYMENTS:-true}
-
-  web:
-    build: ./frontend
-    depends_on:
-      - api
-    ports:
-      - "${WEB_PORT:-8080}:80"
 
 volumes:
   gymflow-demo-data:

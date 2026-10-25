@@ -18,6 +18,9 @@ using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
+if (builder.Configuration["RENDER_EXTERNAL_URL"] is { Length: > 0 } publicUrl)
+    builder.Configuration["App:FrontendUrl"] = publicUrl;
+
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
@@ -106,6 +109,17 @@ if (app.Configuration.GetValue("Database:MigrateOnStartup", true))
 app.UseExceptionHandler();
 app.UseStatusCodePages();
 
+app.UseDefaultFiles();
+app.UseStaticFiles(new StaticFileOptions
+{
+    OnPrepareResponse = ctx =>
+    {
+        if (ctx.Context.Request.Path.StartsWithSegments("/assets"))
+            ctx.Context.Response.Headers.CacheControl = "public, max-age=31536000, immutable";
+    }
+});
+app.UseRouting();
+
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
@@ -120,6 +134,7 @@ app.UseRateLimiter();
 
 app.MapControllers();
 app.MapHealthChecks("/health");
+app.MapFallbackToFile("{*path:regex(^(?!api/|assets/).*$)}", "index.html");
 
 app.Run();
 

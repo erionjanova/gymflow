@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: gymflow
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: ConnectionStrings__Database
+        sync: false
+      - key: Jwt__Secret
+        generateValue: true
+      - key: ASPNETCORE_HTTP_PORTS
+        value: "10000"
+      - key: ASPNETCORE_FORWARDEDHEADERS_ENABLED
+        value: "true"
+      - key: Seed__AdminEmail
+        value: admin@gymflow.local
+      - key: Seed__AdminPassword
+        value: Admin12345
+      - key: Seed__AdminFullName
+        value: Erion Janova
+      - key: Seed__DemoGym
+        value: "true"
+      - key: Payments__DemoMode
+        value: "true"

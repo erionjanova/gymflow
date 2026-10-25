@@ -20,6 +20,12 @@ public class EmailDispatcher(
     {
         await foreach (var message in queue.Reader.ReadAllAsync(stoppingToken))
         {
+            if (string.IsNullOrWhiteSpace(_smtp.Host))
+            {
+                logger.LogInformation("Email sending is off, skipped '{Subject}' to {To}", message.Subject, message.To);
+                continue;
+            }
+
             for (var attempt = 1; attempt <= MaxAttempts; attempt++)
             {
                 try

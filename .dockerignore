@@ -1,0 +1,9 @@
+.git
+docs
+**/node_modules
+**/dist
+**/bin
+**/obj
+**/*.tsbuildinfo
+backend/tests
+.env
