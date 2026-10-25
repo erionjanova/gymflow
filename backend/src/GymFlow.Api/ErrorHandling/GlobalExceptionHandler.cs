@@ -19,10 +19,11 @@ public class GlobalExceptionHandler(IProblemDetailsService problemDetails, ILogg
             ConflictException e => (StatusCodes.Status409Conflict, e.Code, e.Message),
             UnauthorizedException e => (StatusCodes.Status401Unauthorized, e.Code, e.Message),
             ForbiddenException e => (StatusCodes.Status403Forbidden, e.Code, e.Message),
+            Stripe.StripeException => (StatusCodes.Status502BadGateway, "payment_provider_error", "The payment provider could not complete the request. Please try again."),
             _ => (StatusCodes.Status500InternalServerError, "server_error", "Something went wrong.")
         };
 
-        if (status == StatusCodes.Status500InternalServerError)
+        if (status is StatusCodes.Status500InternalServerError or StatusCodes.Status502BadGateway)
             logger.LogError(exception, "Unhandled exception");
 
         var problem = new ProblemDetails { Status = status, Title = title };

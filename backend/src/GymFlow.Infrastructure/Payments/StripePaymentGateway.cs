@@ -15,6 +15,19 @@ public class StripePaymentGateway(IOptions<StripeOptions> options) : IPaymentGat
 
     public async Task<string> CreateCheckoutUrlAsync(CheckoutRequest request, CancellationToken ct)
     {
+        try
+        {
+            return await CreateSessionAsync(request, ct);
+        }
+        catch (StripeException ex) when (request.CustomerId is not null
+            && ex.StripeError?.Code == "resource_missing" && ex.StripeError.Param == "customer")
+        {
+            return await CreateSessionAsync(request with { CustomerId = null }, ct);
+        }
+    }
+
+    private async Task<string> CreateSessionAsync(CheckoutRequest request, CancellationToken ct)
+    {
         var metadata = new Dictionary<string, string>
         {
             [PaymentMetadata.TenantId] = request.TenantId.ToString(),
