@@ -48,6 +48,17 @@ public class FakePaymentGateway(bool configured = true) : IPaymentGateway
 
     public Task<SubscriptionUpdate?> GetCheckoutSubscriptionAsync(string checkoutSessionId, CancellationToken ct) =>
         Task.FromResult(CompletedCheckouts.GetValueOrDefault(checkoutSessionId));
+
+    public List<PlanChangeRequest> PlanChanges { get; } = [];
+
+    public Task<SubscriptionUpdate> ChangePlanAsync(PlanChangeRequest request, CancellationToken ct)
+    {
+        PlanChanges.Add(request);
+        var now = DateTimeOffset.UtcNow;
+        return Task.FromResult(new SubscriptionUpdate(
+            request.SubscriptionId, "active", "cus_123", now.AddMonths(1), false, now,
+            request.TenantId, request.UserId, request.PlanId));
+    }
 }
 
 public class ShiftedTimeProvider(TimeSpan shift) : TimeProvider

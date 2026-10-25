@@ -94,6 +94,41 @@ public class BillingService(
             .FirstOrDefaultAsync(ct);
     }
 
+    public async Task<MySubscriptionDto> ChangePlanAsync(Guid planId, CancellationToken ct)
+    {
+        if (!gateway.IsConfigured)
+            throw new DomainException("payments_not_configured", "Online payments are not set up yet.");
+
+        var userId = currentUser.RequireUserId();
+        var tenantId = tenantContext.RequireTenantId();
+
+        var subscription = await db.MemberSubscriptions.AsNoTracking()
+            .SingleOrDefaultAsync(s => s.UserId == userId
+                && (s.Status == SubscriptionStatus.Active || s.Status == SubscriptionStatus.PastDue), ct)
+            ?? throw new NotFoundException("subscription_not_found", "You don't have an active membership.");
+
+        if (subscription.Status == SubscriptionStatus.PastDue)
+            throw new DomainException("payment_past_due", "Your last payment failed. Update your card before changing plan.");
+
+        var plan = await db.MembershipPlans.AsNoTracking().SingleOrDefaultAsync(p => p.Id == planId && p.IsActive, ct)
+            ?? throw new NotFoundException("plan_not_found", "Membership plan not found.");
+
+        if (plan.Id == subscription.PlanId)
+        {
+            if (subscription.CancelAtPeriodEnd)
+                return await SetCancelAtPeriodEndAsync(false, ct);
+
+            throw new ConflictException("same_plan", "You're already on this plan.");
+        }
+
+        var gym = await db.Tenants.AsNoTracking().SingleAsync(t => t.Id == tenantId, ct);
+        var update = await gateway.ChangePlanAsync(new PlanChangeRequest(
+            subscription.StripeSubscriptionId, tenantId, userId, plan.Id, gym.Name, plan.Name, plan.Price, gym.Currency, plan.Interval), ct);
+        await ApplyUpdateAsync(update, ct);
+
+        return (await GetMineAsync(ct))!;
+    }
+
     public async Task<MySubscriptionDto> SetCancelAtPeriodEndAsync(bool cancel, CancellationToken ct)
     {
         var userId = currentUser.RequireUserId();
@@ -175,6 +210,10 @@ public class BillingService(
             logger.LogInformation("Skipping stale event for subscription {Id}", update.StripeSubscriptionId);
             return false;
         }
+
+        if (update.PlanId is { } newPlanId && newPlanId != subscription.PlanId
+            && await db.MembershipPlans.IgnoreQueryFilters().AnyAsync(p => p.Id == newPlanId && p.TenantId == subscription.TenantId, ct))
+            subscription.PlanId = newPlanId;
 
         await db.SaveChangesAsync(ct);
         logger.LogInformation("Subscription {Id} is now {Status}", update.StripeSubscriptionId, subscription.Status);

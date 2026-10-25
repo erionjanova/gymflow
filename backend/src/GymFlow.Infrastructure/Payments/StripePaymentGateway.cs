@@ -53,7 +53,7 @@ public class StripePaymentGateway(IOptions<StripeOptions> options, TimeProvider 
                     PriceData = new SessionLineItemPriceDataOptions
                     {
                         Currency = request.Currency.ToLowerInvariant(),
-                        UnitAmount = (long)Math.Round(request.Price * 100, MidpointRounding.AwayFromZero),
+                        UnitAmount = ToMinorUnits(request.Price),
                         Recurring = new SessionLineItemPriceDataRecurringOptions
                         {
                             Interval = request.Interval == BillingInterval.Year ? "year" : "month"
@@ -86,7 +86,39 @@ public class StripePaymentGateway(IOptions<StripeOptions> options, TimeProvider 
         return ToUpdate(subscription, timeProvider.GetUtcNow());
     }
 
+    public async Task<SubscriptionUpdate> ChangePlanAsync(PlanChangeRequest request, CancellationToken ct)
+    {
+        var client = CreateClient();
+        var subscriptions = new SubscriptionService(client);
+        var current = await subscriptions.GetAsync(request.SubscriptionId, cancellationToken: ct);
+
+        var price = await new PriceService(client).CreateAsync(new PriceCreateOptions
+        {
+            Currency = request.Currency.ToLowerInvariant(),
+            UnitAmount = ToMinorUnits(request.Price),
+            Recurring = new PriceRecurringOptions { Interval = request.Interval == BillingInterval.Year ? "year" : "month" },
+            ProductData = new PriceProductDataOptions { Name = $"{request.GymName} – {request.PlanName}" }
+        }, cancellationToken: ct);
+
+        var updated = await subscriptions.UpdateAsync(request.SubscriptionId, new SubscriptionUpdateOptions
+        {
+            Items = [new SubscriptionItemOptions { Id = current.Items.Data[0].Id, Price = price.Id }],
+            CancelAtPeriodEnd = false,
+            ProrationBehavior = "create_prorations",
+            Metadata = new Dictionary<string, string>
+            {
+                [PaymentMetadata.TenantId] = request.TenantId.ToString(),
+                [PaymentMetadata.UserId] = request.UserId.ToString(),
+                [PaymentMetadata.PlanId] = request.PlanId.ToString()
+            }
+        }, cancellationToken: ct);
+
+        return ToUpdate(updated, timeProvider.GetUtcNow());
+    }
+
     internal StripeClient CreateClient() => new(_options.SecretKey);
+
+    private static long ToMinorUnits(decimal amount) => (long)Math.Round(amount * 100, MidpointRounding.AwayFromZero);
 
     internal static SubscriptionUpdate ToUpdate(Subscription s, DateTimeOffset eventAt)
     {

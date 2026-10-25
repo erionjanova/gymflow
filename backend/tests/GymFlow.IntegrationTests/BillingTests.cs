@@ -172,6 +172,68 @@ public class BillingTests(PostgresFixture fixture)
     }
 
     [Fact]
+    public async Task Member_can_switch_plan_after_cancelling_and_it_renews_again()
+    {
+        var gym = await fixture.SeedGymAsync("Switch Gym", "Basic", "Premium");
+        var stripeId = $"sub_{Guid.NewGuid():N}";
+        var gateway = new FakePaymentGateway();
+        await WebhookAsync(Update(gym, stripeId, "active", DateTimeOffset.UtcNow.AddMinutes(-5)));
+
+        await using (var db = fixture.CreateContext(gym.TenantId, TenantRole.Member))
+            await Billing(db, gym.TenantId, gym.MemberId, gateway).SetCancelAtPeriodEndAsync(true, default);
+
+        await using (var db = fixture.CreateContext(gym.TenantId, TenantRole.Member))
+        {
+            var switched = await Billing(db, gym.TenantId, gym.MemberId, gateway).ChangePlanAsync(gym.PlanIds[1], default);
+            Assert.Equal(("Premium", false, SubscriptionStatus.Active), (switched.PlanName, switched.CancelAtPeriodEnd, switched.Status));
+        }
+
+        var change = Assert.Single(gateway.PlanChanges);
+        Assert.Equal((stripeId, gym.PlanIds[1], 21m), (change.SubscriptionId, change.PlanId, change.Price));
+
+        await using (var db = fixture.CreateContext(gym.TenantId, TenantRole.Member))
+        {
+            var ex = await Assert.ThrowsAsync<ConflictException>(() =>
+                Billing(db, gym.TenantId, gym.MemberId, gateway).ChangePlanAsync(gym.PlanIds[1], default));
+            Assert.Equal("same_plan", ex.Code);
+        }
+    }
+
+    [Fact]
+    public async Task Choosing_the_current_plan_after_cancelling_keeps_it()
+    {
+        var gym = await fixture.SeedGymAsync("Keep Gym", "Basic");
+        var gateway = new FakePaymentGateway();
+        await WebhookAsync(Update(gym, $"sub_{Guid.NewGuid():N}", "active", DateTimeOffset.UtcNow.AddMinutes(-5)));
+
+        await using (var db = fixture.CreateContext(gym.TenantId, TenantRole.Member))
+            await Billing(db, gym.TenantId, gym.MemberId, gateway).SetCancelAtPeriodEndAsync(true, default);
+
+        await using (var db = fixture.CreateContext(gym.TenantId, TenantRole.Member))
+        {
+            var kept = await Billing(db, gym.TenantId, gym.MemberId, gateway).ChangePlanAsync(gym.PlanIds[0], default);
+            Assert.False(kept.CancelAtPeriodEnd);
+        }
+
+        Assert.Empty(gateway.PlanChanges);
+        Assert.Equal([(gateway.CancelCalls[0].SubscriptionId, true), (gateway.CancelCalls[0].SubscriptionId, false)], gateway.CancelCalls);
+    }
+
+    [Fact]
+    public async Task Webhook_with_a_new_plan_moves_the_membership_to_it()
+    {
+        var gym = await fixture.SeedGymAsync("Webhook Plan Gym", "Basic", "Premium");
+        var stripeId = $"sub_{Guid.NewGuid():N}";
+
+        await WebhookAsync(Update(gym, stripeId, "active", T0));
+        await WebhookAsync(Update(gym, stripeId, "active", T0.AddDays(3)) with { PlanId = gym.PlanIds[1] });
+        Assert.Equal("Premium", (await MineAsync(gym))!.PlanName);
+
+        Assert.False(await WebhookAsync(Update(gym, stripeId, "active", T0.AddDays(1))));
+        Assert.Equal("Premium", (await MineAsync(gym))!.PlanName);
+    }
+
+    [Fact]
     public async Task Checkout_fails_clearly_when_payments_are_not_configured()
     {
         var gym = await fixture.SeedGymAsync("No Stripe Gym", "Basic");

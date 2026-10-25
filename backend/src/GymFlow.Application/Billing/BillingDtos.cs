@@ -37,6 +37,8 @@ public record SetCancelRequest(bool CancelAtPeriodEnd);
 
 public record SyncCheckoutRequest(string CheckoutSessionId);
 
+public record ChangePlanRequest(Guid PlanId);
+
 public record SubscriptionUpdate(
     string StripeSubscriptionId,
     string StripeStatus,

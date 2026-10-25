@@ -9,11 +9,12 @@ import { PlanCard } from "@/components/gym/PlanCard";
 import { SubscriptionBadge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card, Skeleton } from "@/components/ui/Card";
+import { ConfirmDialog } from "@/components/ui/Modal";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { errorMessage } from "@/i18n";
 import { api, gymPath } from "@/lib/api";
 import { formatDate, formatPrice } from "@/lib/format";
-import type { MySubscription } from "@/lib/types";
+import type { MySubscription, Plan } from "@/lib/types";
 import { useGymContext } from "@/providers/GymProvider";
 
 export default function MembershipPage() {
@@ -25,6 +26,7 @@ export default function MembershipPage() {
   const sessionId = params.get("session_id");
   const [timedOut, setTimedOut] = useState(false);
   const syncedSession = useRef<string | null>(null);
+  const [switchTo, setSwitchTo] = useState<Plan | null>(null);
 
   const awaitingPayment = checkout === "success";
   const { data: subscription, isLoading } = useMySubscription(slug, awaitingPayment && !timedOut ? 2000 : false);
@@ -68,6 +70,16 @@ export default function MembershipPage() {
   const startCheckout = useMutation({
     mutationFn: (planId: string) => api.post<{ url: string }>(gymPath(slug, `/plans/${planId}/checkout`)),
     onSuccess: ({ url }) => window.location.assign(url),
+    onError: (e) => toast.error(errorMessage(e)),
+  });
+
+  const changePlan = useMutation({
+    mutationFn: (planId: string) => api.put<MySubscription>(gymPath(slug, "/me/subscription/plan"), { planId }),
+    onSuccess: (s) => {
+      toast.success(t("membership.switched", { plan: s.planName }));
+      queryClient.setQueryData(keys.subscription(slug), s);
+      setSwitchTo(null);
+    },
     onError: (e) => toast.error(errorMessage(e)),
   });
 
@@ -151,32 +163,68 @@ export default function MembershipPage() {
         </Card>
       )}
 
-      {!hasAccess && (
-        <section>
-          <h2 className="mb-4 text-2xl font-semibold">{t("membership.choose")}</h2>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {plans?.map((plan, i) => (
+      <section>
+        <h2 className="text-2xl font-semibold">{hasAccess ? t("membership.changeTitle") : t("membership.choose")}</h2>
+        {hasAccess && <p className="mt-1 text-sm text-muted">{t("membership.changeHint")}</p>}
+        <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {plans?.map((plan, i) => {
+            const isCurrent = hasAccess && plan.id === subscription?.planId;
+            return (
               <PlanCard
                 key={plan.id}
                 plan={plan}
-                highlight={i === 1}
+                highlight={hasAccess ? isCurrent : i === 1}
                 action={
-                  <Button
-                    className="w-full"
-                    variant={i === 1 ? "primary" : "outline"}
-                    loading={startCheckout.isPending && startCheckout.variables === plan.id}
-                    disabled={startCheckout.isPending || confirming}
-                    onClick={() => startCheckout.mutate(plan.id)}
-                  >
-                    {t("membership.subscribe")}
-                  </Button>
+                  !hasAccess ? (
+                    <Button
+                      className="w-full"
+                      variant={i === 1 ? "primary" : "outline"}
+                      loading={startCheckout.isPending && startCheckout.variables === plan.id}
+                      disabled={startCheckout.isPending || confirming}
+                      onClick={() => startCheckout.mutate(plan.id)}
+                    >
+                      {t("membership.subscribe")}
+                    </Button>
+                  ) : isCurrent ? (
+                    subscription?.cancelAtPeriodEnd ? (
+                      <Button className="w-full" loading={setCancel.isPending} onClick={() => setCancel.mutate(false)}>
+                        {t("membership.keepThis")}
+                      </Button>
+                    ) : (
+                      <Button className="w-full" variant="outline" disabled>
+                        {t("membership.current")}
+                      </Button>
+                    )
+                  ) : (
+                    <Button
+                      className="w-full"
+                      variant="outline"
+                      disabled={subscription?.status === "PastDue" || changePlan.isPending}
+                      onClick={() => setSwitchTo(plan)}
+                    >
+                      {t("membership.switch")}
+                    </Button>
+                  )
                 }
               />
-            ))}
-          </div>
-          <p className="mt-4 text-xs text-muted">{t("membership.stripeNote")}</p>
-        </section>
-      )}
+            );
+          })}
+        </div>
+        <p className="mt-4 text-xs text-muted">{t("membership.stripeNote")}</p>
+      </section>
+
+      <ConfirmDialog
+        open={!!switchTo}
+        title={t("membership.switchTitle", { plan: switchTo?.name })}
+        description={t("membership.switchText", {
+          plan: switchTo?.name,
+          price: switchTo ? `${formatPrice(switchTo.price, gym.currency, i18n.language)} / ${t(`plans.per.${switchTo.interval}`)}` : "",
+        })}
+        confirmLabel={t("membership.switchConfirm")}
+        loading={changePlan.isPending}
+        onConfirm={() => switchTo && changePlan.mutate(switchTo.id)}
+        onClose={() => setSwitchTo(null)}
+      />
     </div>
   );
 }
