@@ -27,7 +27,7 @@ Open **http://localhost:8080** and use the demo buttons on the login page. Each 
 | Trainer | Elira Shala | Their own classes, rosters, attendance |
 | Member | Valon Morina | Schedule, bookings, waitlist, membership |
 
-The demo gym comes with six months of history so the charts have something to show. Payments run in demo mode, so you can subscribe, switch plans and cancel without a card. Every email the app sends (invites, password resets, "you got a spot" notices) lands in a local inbox at **http://localhost:8025**.
+The demo gym comes with six months of history so the charts have something to show. Payments run in demo mode, so you can subscribe, switch plans and cancel without a card and without leaving the app. If you'd rather see the real Stripe checkout, copy `.env.example` to `.env` and put a Stripe test key in it. Every email the app sends (invites, password resets, "you got a spot" notices) lands in a local inbox at **http://localhost:8025**.
 
 ## What it does
 
@@ -140,7 +140,7 @@ npm install
 npm run dev
 ```
 
-To use real Stripe test payments, add your test keys as user secrets. They stay outside the repo:
+Out of the box, payments run in demo mode here too: subscribing works without a card and skips the Stripe page. To get the real Stripe checkout page with test cards, add your Stripe test keys as user secrets. They stay outside the repo, and as soon as a key is set the app uses Stripe instead of the demo:
 
 ```bash
 cd backend/src/GymFlow.Api
