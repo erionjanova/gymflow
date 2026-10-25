@@ -2,7 +2,7 @@
 
 **Run your gym. Not spreadsheets.**
 
-**Live demo: [gymflow-6owf.onrender.com](https://gymflow-6owf.onrender.com/login)**, one click on any demo account and you're in. It runs on a free server that sleeps when nobody is using it, so the first visit can take up to a minute to wake up. The demo resets itself every 24 hours, so feel free to click around and break things.
+**Live demo: [erion-gymflow.onrender.com](https://erion-gymflow.onrender.com/login)**, one click on any demo account and you're in. It runs on a free server that sleeps when nobody is using it, so the first visit can take up to a minute to wake up. The demo resets itself every 24 hours, so feel free to click around and break things.
 
 GymFlow is a multi-tenant SaaS for gyms. Every gym that signs up gets its own branded page where members subscribe to a plan, book classes and join waitlists, trainers take attendance, and the owner sees how the business is doing.
 
@@ -12,7 +12,7 @@ I built it to learn the parts of real SaaS work that a normal CRUD app never tou
 
 ## Try it
 
-The quickest way is the [live demo](https://gymflow-6owf.onrender.com/login). To run it on your own machine, you only need Docker.
+The quickest way is the [live demo](https://erion-gymflow.onrender.com/login). To run it on your own machine, you only need Docker.
 
 ```bash
 git clone https://github.com/erionjanova/gymflow.git

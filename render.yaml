@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: gymflow
+    name: erion-gymflow
     runtime: docker
     plan: free
     region: frankfurt
