@@ -16,6 +16,7 @@ public class Tenant : BaseEntity
     public string Currency { get; set; } = "EUR";
     public string TimeZone { get; set; } = DefaultTimeZone;
     public bool IsSuspended { get; set; }
+    public bool RequireActiveMembership { get; set; }
 
     public ICollection<TenantUser> Users { get; set; } = new List<TenantUser>();
     public ICollection<MembershipPlan> Plans { get; set; } = new List<MembershipPlan>();
