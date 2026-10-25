@@ -11,8 +11,13 @@ namespace GymFlow.IntegrationTests;
 [Collection(PostgresCollection.Name)]
 public class BookingTests(PostgresFixture fixture)
 {
-    private BookingService Bookings(ApplicationDbContext db, Guid userId) =>
-        new(db, new FakeCurrentUser(userId), TimeProvider.System);
+    private BookingService Bookings(ApplicationDbContext db, Guid tenantId, Guid userId)
+    {
+        var tenantContext = new TenantContext();
+        tenantContext.SetTenant(tenantId, "test");
+        tenantContext.SetRole(TenantRole.Member);
+        return new BookingService(db, tenantContext, new FakeCurrentUser(userId), TimeProvider.System);
+    }
 
     private SessionService Sessions(ApplicationDbContext db, Guid userId, TenantRole role, Guid tenantId)
     {
@@ -28,7 +33,7 @@ public class BookingTests(PostgresFixture fixture)
     private async Task<BookingDto> BookAsync(Guid tenantId, Guid sessionId, Guid userId)
     {
         await using var db = fixture.CreateContext(tenantId, TenantRole.Member);
-        return await Bookings(db, userId).BookAsync(sessionId, default);
+        return await Bookings(db, tenantId, userId).BookAsync(sessionId, default);
     }
 
     private async Task AssertCountsMatchRowsAsync(Guid tenantId, Guid sessionId, int capacity)
@@ -104,15 +109,15 @@ public class BookingTests(PostgresFixture fixture)
 
         await using (var db = fixture.CreateContext(gym.TenantId, TenantRole.Member))
         {
-            var cancelled = await Bookings(db, users[0]).CancelAsync(sessionId, default);
+            var cancelled = await Bookings(db, gym.TenantId, users[0]).CancelAsync(sessionId, default);
             Assert.Equal(BookingStatus.Cancelled, cancelled.Status);
         }
 
         await using (var db = fixture.CreateContext(gym.TenantId, TenantRole.Member))
         {
-            var second = await Bookings(db, users[1]).GetMineAsync(BookingScope.Upcoming, default);
-            var third = await Bookings(db, users[2]).GetMineAsync(BookingScope.Upcoming, default);
-            var firstHistory = await Bookings(db, users[0]).GetMineAsync(BookingScope.Past, default);
+            var second = await Bookings(db, gym.TenantId, users[1]).GetMineAsync(BookingScope.Upcoming, default);
+            var third = await Bookings(db, gym.TenantId, users[2]).GetMineAsync(BookingScope.Upcoming, default);
+            var firstHistory = await Bookings(db, gym.TenantId, users[0]).GetMineAsync(BookingScope.Past, default);
 
             Assert.Equal(BookingStatus.Booked, Assert.Single(second).Status);
             Assert.Equal(1, Assert.Single(third).WaitlistPosition);
