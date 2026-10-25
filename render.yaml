@@ -3,6 +3,7 @@ services:
     name: gymflow
     runtime: docker
     plan: free
+    region: frankfurt
     dockerfilePath: ./Dockerfile
     healthCheckPath: /health
     autoDeploy: true
