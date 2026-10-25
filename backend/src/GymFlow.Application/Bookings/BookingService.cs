@@ -1,19 +1,25 @@
 using GymFlow.Application.Common;
 using GymFlow.Application.Common.Exceptions;
 using GymFlow.Application.Common.Interfaces;
+using GymFlow.Application.Tenancy;
 using GymFlow.Domain.Entities;
 using GymFlow.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace GymFlow.Application.Bookings;
 
-public class BookingService(IApplicationDbContext db, ICurrentUser currentUser, TimeProvider timeProvider)
+public class BookingService(
+    IApplicationDbContext db,
+    ITenantContext tenantContext,
+    ICurrentUser currentUser,
+    TimeProvider timeProvider)
 {
     private const int HistoryLimit = 100;
 
     public async Task<BookingDto> BookAsync(Guid sessionId, CancellationToken ct)
     {
         var userId = currentUser.RequireUserId();
+        await EnsureMembershipAsync(userId, ct);
 
         var bookingId = await db.WithConcurrencyRetryAsync(async () =>
         {
@@ -73,6 +79,23 @@ public class BookingService(IApplicationDbContext db, ICurrentUser currentUser, 
                 .Take(HistoryLimit);
 
         return await Project(query).ToListAsync(ct);
+    }
+
+    private async Task EnsureMembershipAsync(Guid userId, CancellationToken ct)
+    {
+        if (tenantContext.Role is TenantRole.Owner or TenantRole.Trainer)
+            return;
+
+        var tenantId = tenantContext.RequireTenantId();
+        var required = await db.Tenants.Where(t => t.Id == tenantId).Select(t => t.RequireActiveMembership).SingleAsync(ct);
+        if (!required)
+            return;
+
+        var hasMembership = await db.MemberSubscriptions.AnyAsync(s => s.UserId == userId
+            && (s.Status == SubscriptionStatus.Active || s.Status == SubscriptionStatus.PastDue), ct);
+
+        if (!hasMembership)
+            throw new ForbiddenException("membership_required", "You need an active membership to book classes at this gym.");
     }
 
     private async Task<BookingDto> GetDtoAsync(Guid bookingId, CancellationToken ct) =>

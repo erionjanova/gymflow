@@ -13,6 +13,8 @@ public interface IApplicationDbContext
     DbSet<GymClass> GymClasses { get; }
     DbSet<ClassSession> ClassSessions { get; }
     DbSet<Booking> Bookings { get; }
+    DbSet<Invitation> Invitations { get; }
+    DbSet<MemberSubscription> MemberSubscriptions { get; }
 
     ChangeTracker ChangeTracker { get; }
 

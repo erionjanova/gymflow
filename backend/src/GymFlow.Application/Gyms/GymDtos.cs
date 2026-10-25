@@ -12,10 +12,12 @@ public record GymDto(
     string? Phone,
     string BrandColor,
     string Currency,
-    string TimeZone)
+    string TimeZone,
+    bool RequireActiveMembership)
 {
     public static GymDto From(Tenant t) =>
-        new(t.Id, t.Name, t.Slug, t.Description, t.Address, t.Phone, t.BrandColor, t.Currency, t.TimeZone);
+        new(t.Id, t.Name, t.Slug, t.Description, t.Address, t.Phone, t.BrandColor, t.Currency, t.TimeZone,
+            t.RequireActiveMembership);
 }
 
 public record CreateGymRequest(
@@ -33,6 +35,7 @@ public record UpdateGymRequest(
     string? Phone,
     string BrandColor,
     string Currency,
-    string TimeZone);
+    string TimeZone,
+    bool RequireActiveMembership);
 
 public record GymMembershipDto(GymDto Gym, TenantRole? Role);

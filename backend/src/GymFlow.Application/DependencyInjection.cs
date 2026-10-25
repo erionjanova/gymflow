@@ -1,4 +1,6 @@
 using GymFlow.Application.Auth;
+using GymFlow.Application.Billing;
+using GymFlow.Application.Invitations;
 using GymFlow.Application.Bookings;
 using GymFlow.Application.Classes;
 using GymFlow.Application.Sessions;
@@ -32,6 +34,8 @@ public static class DependencyInjection
         services.AddScoped<ClassService>();
         services.AddScoped<SessionService>();
         services.AddScoped<BookingService>();
+        services.AddScoped<InvitationService>();
+        services.AddScoped<BillingService>();
 
         return services;
     }

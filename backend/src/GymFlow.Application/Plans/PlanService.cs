@@ -44,7 +44,12 @@ public class PlanService(IApplicationDbContext db, IValidator<UpsertPlanRequest>
     public async Task DeleteAsync(Guid id, CancellationToken ct)
     {
         var plan = await FindAsync(id, ct);
-        db.MembershipPlans.Remove(plan);
+
+        if (await db.MemberSubscriptions.AnyAsync(s => s.PlanId == id, ct))
+            plan.IsActive = false;
+        else
+            db.MembershipPlans.Remove(plan);
+
         await db.SaveChangesAsync(ct);
     }
 
