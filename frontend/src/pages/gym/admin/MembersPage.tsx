@@ -202,7 +202,7 @@ export default function MembersPage() {
               return (
                 <li key={m.userId} className="flex flex-wrap items-center gap-4 px-5 py-3">
                   <span className="grid size-10 shrink-0 place-items-center rounded-full bg-accent-soft text-xs font-bold text-accent">{initials(m.fullName)}</span>
-                  <div className="min-w-0 flex-1">
+                  <div className="min-w-0 flex-1 basis-48">
                     <p className="truncate font-medium">
                       {m.fullName}
                       {isMe && <span className="ml-1.5 text-xs text-muted">({t("admin.members.you")})</span>}
@@ -212,10 +212,10 @@ export default function MembersPage() {
                     </p>
                   </div>
                   {isOwner && !isMe ? (
-                    <div className="flex items-center gap-1">
+                    <div className="ml-auto flex items-center gap-1">
                       <Select
                         aria-label={t("invite.role")}
-                        className="h-9 w-32 rounded-full text-sm"
+                        className="h-9 w-36 rounded-full text-sm"
                         value={m.role}
                         onChange={(e) => changeRole.mutate({ userId: m.userId, role: e.target.value as TenantRole })}
                       >
@@ -230,7 +230,9 @@ export default function MembersPage() {
                       </Button>
                     </div>
                   ) : (
-                    <RoleBadge role={m.role} />
+                    <span className="ml-auto">
+                      <RoleBadge role={m.role} />
+                    </span>
                   )}
                 </li>
               );

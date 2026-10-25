@@ -8,7 +8,8 @@ import { Skeleton } from "@/components/ui/Card";
 import { EmptyState, ErrorState } from "@/components/ui/EmptyState";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { errorMessage } from "@/i18n";
-import { addDays, formatCalendarDate, formatDayHeading, localDateOf, startOfWeek, todayIn, zonedRangeOfDays } from "@/lib/format";
+import { cn } from "@/lib/utils";
+import { addDays, formatCalendarDate, formatDayHeading, localDateOf, todayIn, zonedRangeOfDays } from "@/lib/format";
 import type { Session } from "@/lib/types";
 import { useGymContext } from "@/providers/GymProvider";
 
@@ -25,13 +26,12 @@ export default function SchedulePage() {
   const { t, i18n } = useTranslation();
   const { gym, slug } = useGymContext();
   const today = todayIn(gym.timeZone);
-  const thisWeek = startOfWeek(today);
-  const [weekStart, setWeekStart] = useState(thisWeek);
+  const [weekStart, setWeekStart] = useState(today);
 
   const range = useMemo(() => {
-    const from = weekStart === thisWeek ? new Date().toISOString() : zonedRangeOfDays(weekStart, 7, gym.timeZone).from;
+    const from = weekStart === today ? new Date().toISOString() : zonedRangeOfDays(weekStart, 7, gym.timeZone).from;
     return { from, to: zonedRangeOfDays(weekStart, 7, gym.timeZone).to };
-  }, [weekStart, thisWeek, gym.timeZone]);
+  }, [weekStart, today, gym.timeZone]);
 
   const { data: sessions, isLoading, error, refetch } = useSchedule(slug, range.from, range.to);
   const days = groupByDay(sessions ?? [], gym.timeZone);
@@ -49,7 +49,7 @@ export default function SchedulePage() {
               variant="outline"
               size="icon"
               aria-label={t("schedule.prevWeek")}
-              disabled={weekStart <= thisWeek}
+              disabled={weekStart <= today}
               onClick={() => setWeekStart(addDays(weekStart, -7))}
             >
               <ChevronLeft className="size-4" />
@@ -75,8 +75,8 @@ export default function SchedulePage() {
           <EmptyState icon={CalendarX} text={t("schedule.empty")} />
         ) : (
           days.map(([day, list]) => (
-            <section key={day}>
-              <h2 className="mb-3 text-sm font-semibold tracking-wide text-muted uppercase">
+            <section key={day} className="lg:grid lg:grid-cols-[13rem_1fr] lg:gap-8">
+              <h2 className={cn("mb-3 text-sm font-semibold tracking-wide uppercase lg:sticky lg:top-24 lg:mb-0 lg:self-start lg:pt-6", day === today ? "text-accent" : "text-muted")}>
                 {day === today ? t("schedule.today") : formatDayHeading(list[0]!.startsAt, i18n.language, gym.timeZone)}
               </h2>
               <div className="space-y-3">

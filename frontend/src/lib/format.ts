@@ -36,11 +36,6 @@ export const addDays = (date: string, days: number) => {
   return d.toISOString().slice(0, 10);
 };
 
-export const startOfWeek = (date: string) => {
-  const day = parseDate(date).getUTCDay();
-  return addDays(date, day === 0 ? -6 : 1 - day);
-};
-
 export const formatCalendarDate = (date: string, lang: string, options: Intl.DateTimeFormatOptions) =>
   new Intl.DateTimeFormat(localeOf(lang), { timeZone: "UTC", ...options }).format(parseDate(date));
 

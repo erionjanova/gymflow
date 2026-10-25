@@ -19,7 +19,6 @@ import {
   formatDayHeading,
   formatTime,
   localDateOf,
-  startOfWeek,
   todayIn,
   WEEK_DAYS,
   zonedDateTimeToIso,
@@ -321,7 +320,7 @@ export default function SessionsPage() {
   const { gym, slug, isOwner } = useGymContext();
   const queryClient = useQueryClient();
   const today = todayIn(gym.timeZone);
-  const [weekStart, setWeekStart] = useState(startOfWeek(today));
+  const [weekStart, setWeekStart] = useState(today);
   const [rosterFor, setRosterFor] = useState<Session | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Session | null>(null);
@@ -371,8 +370,8 @@ export default function SessionsPage() {
         <Button variant="outline" size="icon" aria-label={t("schedule.nextWeek")} onClick={() => setWeekStart(addDays(weekStart, 7))}>
           <ChevronRight className="size-4" />
         </Button>
-        {weekStart !== startOfWeek(today) && (
-          <Button variant="ghost" size="sm" onClick={() => setWeekStart(startOfWeek(today))}>
+        {weekStart !== today && (
+          <Button variant="ghost" size="sm" onClick={() => setWeekStart(today)}>
             {t("schedule.today")}
           </Button>
         )}

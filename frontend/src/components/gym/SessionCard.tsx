@@ -96,7 +96,7 @@ export function SessionCard({ session }: { session: Session }) {
           </p>
         )}
         <div className="mt-3 flex items-center gap-3">
-          <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-surface-2">
+          <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-surface-2 lg:max-w-sm">
             <div className={cn("h-full rounded-full transition-all", full ? "bg-warning" : "bg-accent")} style={{ width: `${fill}%` }} />
           </div>
           <span className="shrink-0 text-xs font-medium text-muted tabular-nums">

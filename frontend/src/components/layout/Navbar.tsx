@@ -54,14 +54,15 @@ export function Navbar() {
       )}
     >
       <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-10">
-        <Logo />
-
-        <div className="hidden items-center gap-1 md:flex">
-          {links.map((l) => (
-            <NavLink key={l.to} to={l.to} className={linkClass} end>
-              {l.label}
-            </NavLink>
-          ))}
+        <div className="flex items-center gap-8">
+          <Logo />
+          <div className="hidden items-center gap-1 md:flex">
+            {links.map((l) => (
+              <NavLink key={l.to} to={l.to} className={linkClass} end>
+                {l.label}
+              </NavLink>
+            ))}
+          </div>
         </div>
 
         <div className="hidden items-center gap-2 md:flex">
