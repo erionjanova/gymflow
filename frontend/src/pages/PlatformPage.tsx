@@ -29,7 +29,7 @@ export default function PlatformPage() {
   });
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-10">
+    <div className="mx-auto max-w-[100rem] px-4 py-10 sm:px-6 lg:px-10 2xl:px-16">
       <PageHeader title={t("platform.title")} subtitle={t("platform.subtitle")} />
 
       <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

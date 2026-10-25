@@ -17,12 +17,12 @@ export default function MyGymsPage() {
   const ownsGym = gyms?.some((g) => g.role === "Owner") ?? false;
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-10">
+    <div className="mx-auto max-w-[100rem] px-4 py-10 sm:px-6 lg:px-10 2xl:px-16">
       <PageHeader title={t("myGyms.title", { name: user?.fullName.split(" ")[0] })} subtitle={t("myGyms.subtitle")} />
 
       <div className="mt-8">
         {isLoading ? (
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             <Skeleton className="h-28" />
             <Skeleton className="h-28" />
           </div>
@@ -39,7 +39,7 @@ export default function MyGymsPage() {
             }
           />
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {gyms.map((gym) => (
               <Link
                 key={gym.id}

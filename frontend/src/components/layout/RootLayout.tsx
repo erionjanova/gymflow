@@ -18,7 +18,7 @@ export function RootLayout() {
         <Outlet />
       </main>
       <footer className="border-t border-line">
-        <div className="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-6 text-sm text-muted sm:flex-row sm:justify-between sm:px-6 lg:px-10">
+        <div className="mx-auto flex max-w-[100rem] flex-col gap-2 px-4 py-6 text-sm text-muted sm:flex-row sm:justify-between sm:px-6 lg:px-10 2xl:px-16">
           <span>© {new Date().getFullYear()} GymFlow</span>
           <span>{t("footer.tagline")}</span>
         </div>

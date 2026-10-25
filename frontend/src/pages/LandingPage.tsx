@@ -20,7 +20,7 @@ export default function LandingPage() {
     <>
       <section className="relative overflow-hidden">
         <div className="hero-glow pointer-events-none absolute inset-0" />
-        <div className="relative mx-auto grid max-w-7xl gap-12 px-4 pt-16 pb-20 sm:px-6 md:pt-24 lg:grid-cols-[1.1fr_0.9fr] lg:items-center lg:px-10">
+        <div className="relative mx-auto grid max-w-[100rem] gap-12 px-4 pt-16 pb-20 sm:px-6 md:pt-24 lg:grid-cols-[1.1fr_0.9fr] lg:items-center lg:px-10 2xl:px-16">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
             <span className="inline-flex items-center gap-2 rounded-full border border-line bg-surface px-3 py-1 text-xs font-semibold text-muted">
               <ShieldCheck className="size-3.5 text-accent" />
@@ -75,7 +75,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 pb-24 sm:px-6 lg:px-10">
+      <section className="mx-auto max-w-[100rem] px-4 pb-24 sm:px-6 lg:px-10 2xl:px-16">
         <h2 className="max-w-2xl text-3xl font-semibold sm:text-4xl">{t("landing.featuresTitle")}</h2>
         <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {features.map((f, i) => (

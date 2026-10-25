@@ -7,7 +7,7 @@ export function AuthLayout({ title, subtitle, children }: { title: string; subti
   const { t } = useTranslation();
 
   return (
-    <div className="mx-auto grid max-w-7xl gap-10 px-4 py-10 sm:px-6 md:py-16 lg:grid-cols-2 lg:gap-16 lg:px-10">
+    <div className="mx-auto grid max-w-[100rem] gap-10 px-4 py-10 sm:px-6 md:py-16 lg:grid-cols-2 lg:gap-16 lg:px-10 2xl:px-16">
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="mx-auto w-full max-w-md lg:py-8">
         <h1 className="text-4xl font-semibold">{title}</h1>
         <p className="mt-2 text-muted">{subtitle}</p>

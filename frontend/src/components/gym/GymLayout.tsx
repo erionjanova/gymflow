@@ -70,7 +70,7 @@ export default function GymLayout() {
       <div className="gym-theme" style={{ "--brand": gym.brandColor } as CSSProperties}>
         <section className="relative overflow-hidden border-b border-line">
           <div className="hero-glow pointer-events-none absolute inset-0" />
-          <div className="relative mx-auto max-w-7xl px-4 pt-8 pb-4 sm:px-6 lg:px-10">
+          <div className="relative mx-auto max-w-[100rem] px-4 pt-8 pb-4 sm:px-6 lg:px-10 2xl:px-16">
             <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-4">
                 <span className="grid size-14 shrink-0 place-items-center rounded-2xl bg-accent font-display text-2xl font-bold text-accent-fg shadow-lg shadow-accent/25">
@@ -121,7 +121,7 @@ export default function GymLayout() {
           </div>
         </section>
 
-        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-10">
+        <div className="mx-auto max-w-[100rem] px-4 py-8 sm:px-6 lg:px-10 2xl:px-16">
           <Outlet />
         </div>
       </div>

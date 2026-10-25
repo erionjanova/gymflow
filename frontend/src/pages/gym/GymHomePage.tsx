@@ -54,7 +54,7 @@ export default function GymHomePage() {
         {!!classes?.length && (
           <section>
             <h2 className="mb-4 text-2xl font-semibold">{t("gymHome.classes")}</h2>
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid gap-3 sm:grid-cols-2 2xl:grid-cols-3">
               {classes.map((c) => (
                 <div key={c.id} className="rounded-2xl border border-line bg-surface p-5">
                   <p className="font-semibold">{c.name}</p>
