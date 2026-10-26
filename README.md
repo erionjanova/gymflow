@@ -155,10 +155,10 @@ stripe listen --forward-to localhost:5009/api/payments/stripe/webhook
 
 ## What I'd add next
 
-- Deploy a live version so nobody has to run Docker to see it
 - Member check-in with a QR code at the front desk
 - Class packs and drop-in passes, not only subscriptions
-- A CI pipeline that runs the tests on every push
+- End-to-end tests with Playwright that walk through the main journeys in a real browser
+- Real email delivery on the live demo, so invites and password resets arrive in a real inbox
 
 ---
 
